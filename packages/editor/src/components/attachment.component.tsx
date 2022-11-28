@@ -25,7 +25,7 @@ export interface AttachmentComponentState {
 
 // eslint-disable-next-line max-len
 // const svg =
-//   '<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><g><rect fill="#555" height="100%" width="100%"/></g><g><text font-family="Helvetica, Arial, sans-serif" font-size="24" y="50%" x="50%" text-anchor="middle" dominant-baseline="middle" stroke-width="0" stroke="#000" fill="#000000">Image</text></g></svg>'
+//   '<svg></svg>'
 // const defaultAttachmentSrc =
 //   'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)
 export const attachmentComponent = defineComponent({
@@ -53,7 +53,7 @@ export const attachmentComponent = defineComponent({
     })
 
     onViewInit(() => {
-      if(!state.url) {
+      if (!state.url) {
         commander.removeComponent(self)
         commander.insert(state.name)
       }

@@ -27,5 +27,6 @@ export interface EditorOptions extends ViewOptions {
    * 资源上传接口
    * @param config
    */
+  // eslint-disable-next-line max-len
   uploader?(config: UploadConfig): string | string[] | Promise<string | string[] | CustomFile[]> | Observable<string | string[] | CustomFile[]>
 }

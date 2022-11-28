@@ -123,7 +123,7 @@ importers:
       '@rollup/plugin-typescript': ^9.0.2
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.8
-      '@textbus/core': ^2.5.8
+      '@textbus/core': ^2.5.10
       reflect-metadata: ^0.1.13
       rimraf: ^3.0.2
       rollup: ^3.2.5
@@ -146,8 +146,8 @@ importers:
       '@rollup/plugin-typescript': ^9.0.2
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.8
-      '@textbus/browser': ^2.5.8
-      '@textbus/core': ^2.5.8
+      '@textbus/browser': ^2.5.10
+      '@textbus/core': ^2.5.10
       reflect-metadata: ^0.1.13
       rimraf: ^3.0.2
       rollup: ^3.2.5
@@ -198,9 +198,9 @@ importers:
       '@tanbo/css-themes': ^0.0.1
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.8
-      '@textbus/browser': ^2.5.8
-      '@textbus/collaborate': ^2.5.8
-      '@textbus/core': ^2.5.8
+      '@textbus/browser': ^2.5.10
+      '@textbus/collaborate': ^2.5.10
+      '@textbus/core': ^2.5.10
       katex: ^0.16.0
       prismjs: ^1.23.0
       rimraf: ^3.0.2
@@ -5252,8 +5252,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      is-text-path: 1.0.1
       JSONStream: 1.3.5
+      is-text-path: 1.0.1
       lodash: 4.17.21
       meow: 8.1.2
       split2: 3.2.2
@@ -5839,7 +5839,7 @@ packages:
     optional: true
 
   /encoding/0.1.13:
-    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
+    resolution: {integrity: sha1-VldK/deR9UqOmyeFwFgqLSYhD6k=}
     requiresBuild: true
     dependencies:
       iconv-lite: 0.6.3
@@ -6693,7 +6693,7 @@ packages:
     optional: true
 
   /fsevents/2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    resolution: {integrity: sha1-ilJveLj99GI7cJ4Ll1xSwkwC/Ro=}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -13380,7 +13380,7 @@ packages:
     dev: true
 
   /ws/6.2.2:
-    resolution: {integrity: sha512-zmhltoSR8u1cnDsD43TX59mzoMZsLKqUweyYBAIvTngR3shc0W6aOZylZmq/7hqyVxPdi+5Ud2QInblgyE72fw==}
+    resolution: {integrity: sha1-3Vzb1XqZeZFgl2UtePHMX66gwy4=}
     requiresBuild: true
     peerDependencies:
       bufferutil: ^4.0.1
