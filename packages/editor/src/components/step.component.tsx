@@ -66,7 +66,7 @@ export const stepComponent = defineComponent({
       render(isOutputMode: boolean, slotRender): VElement {
         const currentStep = state.step
         return (
-          <tb-step step={state.step}>
+          <div component-name='StepComponent' class='tb-step' step={state.step}>
             {
               slots.toArray().map((slot, index) => {
                 let state = 'tb-waiting'
@@ -109,7 +109,7 @@ export const stepComponent = defineComponent({
                 )
               })
             }
-          </tb-step>
+          </div>
         )
       }
     }
@@ -120,7 +120,7 @@ export const stepComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-step {
+.tb-step {
   display: flex;
 }
 .tb-step-item {
@@ -143,7 +143,7 @@ tb-step {
   border-top-style: dashed;
 }
 .tb-step-item.tb-current .tb-step-item-icon {
-  background-color: #1296db;
+  background-color: #5f82ff;
 }
 
 .tb-step-item.tb-waiting .tb-step-item-line {
@@ -230,7 +230,7 @@ tb-step {
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.nodeName.toLowerCase() === 'tb-step'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'StepComponent'
   },
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
     return stepComponent.createInstance(context, {

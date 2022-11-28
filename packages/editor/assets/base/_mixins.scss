@@ -87,7 +87,7 @@
 }
 
 @mixin btn-size($name, $v, $h, $font-size, $radius) {
-  .textbus-btn-#{$name} {
+  .textbus-btn-#{$name + ''} {
     padding: $v $h;
     font-size: $font-size;
     border-radius: $radius;
@@ -95,7 +95,7 @@
 }
 
 @mixin btn-theme($name, $color, $bg-color) {
-  .textbus-btn-#{$name} {
+  .textbus-btn-#{$name + ''} {
     color: $color;
     background-color: $bg-color;
     @if $name != default {

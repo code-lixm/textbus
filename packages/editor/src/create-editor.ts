@@ -35,7 +35,16 @@ import {
   tableComponent,
   videoComponent,
   jumbotronComponent,
-  listComponent, todolistComponent, blockquoteComponent, paragraphComponent,
+  listComponent,
+  todolistComponent,
+  blockquoteComponent,
+  paragraphComponent,
+  mentionComponentLoader,
+  mentionComponent,
+  iframeComponentLoader,
+  iframeComponent,
+  attachmentComponentLoader,
+  attachmentComponent
 } from './components/_api'
 import {
   boldFormatLoader,
@@ -85,9 +94,9 @@ import {
   historyForwardTool, imageTool, insertParagraphAfterTool, insertParagraphBeforeTool,
   italicTool, linkTool, olTool,
   strikeThroughTool, tableAddTool, tableRemoveTool, textAlignTool, textBackgroundTool, textIndentTool, ulTool,
-  underlineTool, unlinkTool, ToolFactory, componentsTool, formatPainterTool
+  underlineTool, unlinkTool, ToolFactory, componentsTool, formatPainterTool, attachmentTool, todolistTool
 } from './toolbar/_api'
-import { LinkJumpTipPlugin } from './plugins/_api'
+import { LinkJumpTipPlugin, MentionPlugin } from './plugins/_api'
 
 export const defaultComponentLoaders: ComponentLoader[] = [
   imageCardComponentLoader,
@@ -108,6 +117,9 @@ export const defaultComponentLoaders: ComponentLoader[] = [
   preComponentLoader,
   tableComponentLoader,
   videoComponentLoader,
+  mentionComponentLoader,
+  iframeComponentLoader,
+  attachmentComponentLoader,
 ]
 
 export const defaultFormatLoaders: FormatLoader[] = [
@@ -129,7 +141,7 @@ export const defaultFormatLoaders: FormatLoader[] = [
   textAlignFormatLoader,
   textIndentFormatLoader,
   verticalAlignFormatLoader,
-  dirFormatLoader
+  dirFormatLoader,
 ]
 
 export const defaultComponents: Component[] = [
@@ -150,7 +162,10 @@ export const defaultComponents: Component[] = [
   timelineComponent,
   stepComponent,
   alertComponent,
-  jumbotronComponent
+  jumbotronComponent,
+  mentionComponent,
+  iframeComponent,
+  attachmentComponent
 ]
 export const defaultFormatters: Formatter[] = [
   boldFormatter,
@@ -193,13 +208,13 @@ export const defaultTools: ToolFactory[][] = [
   [componentsTool],
   [headingTool],
   [boldTool, italicTool, strikeThroughTool, underlineTool],
-  [olTool, ulTool],
+  [olTool, ulTool, todolistTool],
   [fontSizeTool, textIndentTool],
   [colorTool, textBackgroundTool],
   [insertParagraphBeforeTool, insertParagraphAfterTool],
   [fontFamilyTool],
   [linkTool, unlinkTool],
-  [imageTool],
+  [imageTool, attachmentTool],
   [textAlignTool],
   [tableAddTool, tableRemoveTool],
   [formatPainterTool],
@@ -210,7 +225,8 @@ export function createEditor(options: EditorOptions = {}) {
   return new Editor({
     plugins: [
       () => new Toolbar(defaultTools),
-      () => new LinkJumpTipPlugin()
+      () => new LinkJumpTipPlugin(),
+      () => new MentionPlugin()
     ],
     ...defaultOptions,
     ...options

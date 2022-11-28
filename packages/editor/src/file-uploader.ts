@@ -9,6 +9,12 @@ export interface UploadConfig {
   multiple: boolean
 }
 
+export interface CustomFile {
+  url: string
+  name: string
+  [key:string]: unknown
+}
+
 export abstract class FileUploader {
-  abstract upload(config: UploadConfig): Observable<string | string[]>
+  abstract upload(config: UploadConfig): Observable<string | string[] | CustomFile[]>
 }

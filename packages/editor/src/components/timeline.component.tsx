@@ -18,7 +18,7 @@ import { boldFormatter } from '../formatters/inline-element.formatter'
 import { paragraphComponent } from './paragraph.component'
 
 const timelineTypes = ['primary', 'info', 'success', 'warning', 'danger', 'dark', 'gray']
-const colors = ['#1296db', '#6ad1ec', '#15bd9a', '#ff9900', '#E74F5E', '#495060', '#bbbec4']
+const colors = ['#5f82ff', '#6ad1ec', '#15bd9a', '#ff9900', '#E74F5E', '#495060', '#bbbec4']
 
 export type TimelineType = 'primary' | 'info' | 'success' | 'warning' | 'danger' | 'dark' | 'gray';
 
@@ -36,11 +36,11 @@ export function createTimelineItem(injector: Injector, type: TimelineType = 'pri
   })
 
   const title = blockComponent.createInstance(injector)
-  title.slots.first!.insert('时间主题', [
+  title.slots.first!.insert('主题', [
     [fontSizeFormatter, '18px'],
     [boldFormatter, true]
   ])
-  title.slots.first!.insert(' 2020-02-02', [
+  title.slots.first!.insert(` ${new Date().toLocaleDateString().replaceAll('/', '-')}`, [
     [fontSizeFormatter, '15px'],
     [colorFormatter, '#777']
   ])
@@ -67,7 +67,7 @@ export const timelineComponent = defineComponent({
     return {
       render(isOutput: boolean, slotRender: SlotRender): VElement {
         return (
-          <tb-timeline>
+          <div component-name='TimelineComponent' class='tb-timeline'>
             {
               slots.toArray().map(slot => {
                 const type = slot.state!.type
@@ -104,7 +104,7 @@ export const timelineComponent = defineComponent({
                 )
               })
             }
-          </tb-timeline>
+          </div>
         )
       }
     }
@@ -115,7 +115,7 @@ export const timelineComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-timeline {
+.tb-timeline {
   display: block;
   padding-top: 1em;
   padding-left: 5px;
@@ -197,14 +197,11 @@ tb-timeline {
 .tb-timeline-item:hover .tb-timeline-add {
   display: block;
 }
-.tb-timeline-content {
-  overflow: hidden;
-}
 `
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.nodeName.toLowerCase() === 'tb-timeline'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'TimelineComponent'
   },
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
     return timelineComponent.createInstance(context, {

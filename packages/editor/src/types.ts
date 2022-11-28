@@ -3,7 +3,7 @@ import { Component } from '@textbus/core'
 import { ViewOptions, ComponentLoader } from '@textbus/browser'
 
 import { I18NConfig } from './i18n'
-import { UploadConfig } from './file-uploader'
+import { CustomFile, UploadConfig } from './file-uploader'
 
 /**
  * 编辑器配置项
@@ -21,10 +21,11 @@ export interface EditorOptions extends ViewOptions {
   i18n?: I18NConfig
   /** 当内容为空时，编辑器内的提示文字 */
   placeholder?: string
-
+  /** 透传的方法 */
+  moduleAPI?: Record<string, any>
   /**
    * 资源上传接口
    * @param config
    */
-  uploader?(config: UploadConfig): string | string[] | Promise<string | string[]> | Observable<string | string[]>
+  uploader?(config: UploadConfig): string | string[] | Promise<string | string[] | CustomFile[]> | Observable<string | string[] | CustomFile[]>
 }

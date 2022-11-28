@@ -144,6 +144,12 @@ export const i18n_zh_CN: I18NConfig = {
           confirmBtnText: '确定',
         }
       },
+      attachmentTool: {
+        tooltip: '附件',
+        view: {
+          uploadBtnText: '点击上传附件'
+        }
+      },
       inlineMarginTool: {
         label: '外边距',
         tooltip: '外边距',
@@ -340,6 +346,9 @@ export const i18n_zh_CN: I18NConfig = {
       componentsTool: {
         tooltip: '组件库',
       },
+      todolistTool: {
+        tooltip: '待办'
+      }
     },
     linkJump: {
       accessLink: '跳转'
@@ -453,7 +462,7 @@ export const i18n_zh_CN: I18NConfig = {
       creator: {
         name: '数学公式'
       },
-      setter: {
+      setting: {
         title: '数学公式设置',
         label: '源代码',
         placeholder: '请输入代码',
@@ -480,13 +489,29 @@ export const i18n_zh_CN: I18NConfig = {
       creator: {
         name: '名词释义'
       },
-      setter: {
+      setting: {
         title: '名词释义设置',
         confirmBtnText: '确定',
         cancelBtnText: '取消',
         widthInputPlaceholder: '请输入标题宽度',
         widthLabel: '标题宽度'
       }
-    }
+    },
+    iframeComponent: {
+      creator: {
+        name: '插入网页'
+      },
+      setting: {
+      }
+    },
+    attachmentComponent: {
+      creator: {
+        name: '附件设置'
+      },
+      setting: {
+        name: '附件名称',
+        namePlaceholder: '请输入附件名称'
+      }
+    },
   }
 }

@@ -12,56 +12,100 @@ import {
   useSlots,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
 import { Injector } from '@tanbo/di'
 import { paragraphComponent } from './paragraph.component'
+import { parse, stringify, userList } from './custom-parse'
 
+import { EditorOptions } from '../types'
 
 export interface TodoListSlotState {
   active: boolean
   disabled: boolean
+  time?: string
+  userList?: userList
+  addUserIsOpen: boolean
+  searchText: string,
+  positionId: string
 }
+
+export interface TodoModalOptions {
+  time: string;
+  userList: userList;
+  setTodoState: (state: TodoListSlotState) => void;
+}
+
+
+const nanoid = () => Math.random().toString(36).substr(2)
 
 export const todolistComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'TodolistComponent',
   separable: true,
   zenCoding: {
-    match: /^-\s\[(x|\s)?\\]$/,
+    match: /^(-\s\[|\[)(x|\s)?\]$/,
     key: ' ',
-    generateInitData(content: string): ComponentInitData<void, TodoListSlotState> {
+    generateInitData(
+      content: string
+    ): ComponentInitData<void, TodoListSlotState> {
       const isChecked = content.charAt(3) === 'x'
       return {
         slots: [
-          new Slot<TodoListSlotState>([
-            ContentType.Text,
-            ContentType.InlineComponent
-          ], {
-            active: isChecked,
-            disabled: false
-          })
+          new Slot<TodoListSlotState>(
+            [ContentType.Text, ContentType.InlineComponent],
+            {
+              active: isChecked,
+              disabled: false,
+              time: '',
+              userList: [],
+              addUserIsOpen: false,
+              searchText: '',
+              positionId: nanoid()
+            }
+          )
         ]
       }
     }
   },
   setup(initData: ComponentInitData<void, TodoListSlotState>) {
     const { Text, InlineComponent } = ContentType
-    const slots = useSlots<TodoListSlotState>(initData.slots || [
-      new Slot<TodoListSlotState>([Text, InlineComponent])
-    ])
+    const slots = useSlots<TodoListSlotState>(
+      initData.slots || [new Slot<TodoListSlotState>([Text, InlineComponent], {
+        active: false,
+        disabled: false,
+        time: '',
+        userList: [],
+        addUserIsOpen: false,
+        searchText: '',
+        positionId: nanoid()
+      })]
+    )
+
     if (slots.length === 0) {
       slots.push(new Slot<TodoListSlotState>([Text, InlineComponent]))
     }
     const injector = useContext()
+
     const self = useSelf()
     const selection = injector.get(Selection)
     const commander = injector.get(Commander)
 
-    onBreak(ev => {
+    const options = injector.get(EDITOR_OPTIONS) as EditorOptions
+    const { openSetTimeModal } = options.moduleAPI?.todo || {}
+    const { shareUsers } = options.moduleAPI?.mention || {
+      shareUsers: []
+    }
+
+    onBreak((ev) => {
       const slot = ev.target
       const index = ev.data.index
       ev.preventDefault()
-      if (slot.isEmpty && index === 0 && slots.length > 1 && slot === slots.last) {
+      if (
+        slot.isEmpty &&
+        index === 0 &&
+        slots.length > 1 &&
+        slot === slots.last
+      ) {
         const p = paragraphComponent.createInstance(injector)
         commander.insertAfter(p, self)
         slots.remove(slot)
@@ -69,71 +113,205 @@ export const todolistComponent = defineComponent({
         selection.setPosition(firstSlot, 0)
       } else {
         const nextSlot = slot.cut(index)
+        //重置状态
+        nextSlot.state = {
+          active: false,
+          disabled: false,
+          time: '',
+          userList: [],
+          addUserIsOpen: false,
+          searchText: '',
+          positionId: nanoid()
+        }
+
         slots.insertAfter(nextSlot, slot)
         selection.setPosition(nextSlot, 0)
       }
     })
-    const stateCollection = [{
-      active: false,
-      disabled: false
-    }, {
-      active: true,
-      disabled: false
-    }, {
-      active: false,
-      disabled: true
-    }, {
-      active: true,
-      disabled: true
-    }]
-
-    function getStateIndex(active: boolean, disabled: boolean) {
-      for (let i = 0; i < 4; i++) {
-        const item = stateCollection[i]
-        if (item.active === active && item.disabled === disabled) {
-          return i
-        }
-      }
-      return -1
-    }
 
     return {
       render(_, slotRender): VElement {
         return (
-          <tb-todolist>
-            {
-              slots.toArray().map(slot => {
-                const state = slot.state!
-                const classes = ['tb-todolist-state']
+          <div component-name="TodoComponent" class="tb-todolist">
+            {slots.toArray().map((slot) => {
+              const state = slot.state || {
+                active: false,
+                disabled: false,
+                time: '',
+                userList: [],
+                addUserIsOpen: false,
+                searchText: '',
+                positionId: nanoid()
+              }
 
-                if (state.active) {
-                  classes.push('tb-todolist-state-active')
+              const classes = ['tb-todolist-item']
+
+              if (state.active) {
+                classes.push('tb-todolist-state-active')
+              }
+              if (state.disabled) {
+                classes.push('tb-todolist-state-disabled')
+              }
+              const options: TodoModalOptions = {
+                time: state.time || '',
+                userList: state.userList || [],
+                setTodoState: ({
+                  time = state.time,
+                  userList = state.userList
+                }: TodoListSlotState) => {
+                  slot.updateState((draft) => {
+                    draft.time = time
+                    draft.userList = userList
+                  })
                 }
-                if (state.disabled) {
-                  classes.push('tb-todolist-state-disabled')
-                }
-                return (
-                  <div class="tb-todolist-item">
-                    <div class="tb-todolist-btn">
-                      <div class={classes.join(' ')} onClick={() => {
-                        const i = (getStateIndex(state.active, state.disabled) + 1) % 4
-                        const newState = stateCollection[i]
-                        slot.updateState(draft => {
-                          draft.active = newState.active
-                          draft.disabled = newState.disabled
+              }
+
+              const userList = stringify(state.userList || [])
+              const timeClass = state.time
+                ? 'background_normal'
+                : 'background_normal background_no_time'
+
+              const searchedList = shareUsers.filter((item) =>
+                item.username.includes(state.searchText)
+              )
+              const unSearchedList = shareUsers.filter(
+                (item) => !item.username.includes(state.searchText)
+              )
+              const filterUserList = [...searchedList, ...unSearchedList].map(
+                ({ username, authId }) => ({ name: username, info: authId })
+              )
+
+              return (
+                <div
+                  class={classes.join(' ')}
+                  user-list={userList}
+                  todo-time={state.time}
+                >
+                  <div class="tb-todolist-btn">
+                    <div
+                      class="tb-todolist-state"
+                      onClick={() => {
+                        slot.updateState((draft) => {
+                          draft.active = !draft.active
                         })
-                      }}/>
-                    </div>
-                    {
-                      slotRender(slot, () => {
-                        return <div class="tb-todolist-content"/>
-                      })
-                    }
+                      }}
+                    />
                   </div>
-                )
-              })
-            }
-          </tb-todolist>
+                  <div>
+                    {slotRender(slot, () => {
+                      return <span class="tb-todolist-content" />
+                    })}
+                    {state.userList?.length ? (
+                      <span class="info_box">
+                        <span>
+                          {state.userList?.map(({ name, info }) => (
+                            <span class="mention">
+                              @{name}
+                              <span
+                                class="cross"
+                                onClick={() => {
+                                  slot.updateState((draft) => {
+                                    draft.userList = draft.userList?.filter(
+                                      ({ info: id }) => id !== info
+                                    )
+                                  })
+                                }}
+                              ></span>
+                            </span>
+                          ))}
+                        </span>
+                        <span
+                          class="add_user"
+                          onClick={() => {
+                            slot.updateState((draft) => {
+                              draft.addUserIsOpen = true
+                            })
+                          }}
+                        >
+                          {state.addUserIsOpen ? (
+                            <div
+                              onClick={(e: MouseEvent) => e.stopPropagation()}
+                              style={{
+                                position: 'absolute',
+                                left: '-6px',
+                                background: '#ffffff',
+                                border: '1px solid #e8e8e8',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                top: '26px',
+                                boxShadow: '0px 0px 5px rgba(0,0,0, 0.1)',
+                                color: '#000'
+                              }}
+                            >
+                              <input
+                                type="text"
+                                placeholder="搜索"
+                                // ref={searchInput}
+                                onInput={(e: any) => {
+                                  slot.updateState((draft) => {
+                                    draft.searchText = e.target.value
+                                  })
+                                }}
+                                // onKeydown={onKeydown}
+                                style={{
+                                  paddingBottom: '4px',
+                                  marginBottom: '4px',
+                                  border: 'none',
+                                  outline: 'none',
+                                  borderBottom: '1px solid #e8e8e8'
+                                }}
+                              />
+                              <div>
+                                {filterUserList.map((option) => {
+                                  return (
+                                    <div
+                                      key={option.info}
+                                      style={{
+                                        whiteSpace: 'nowrap',
+                                        cursor: 'pointer',
+                                        minWidth: '100px',
+                                        padding: '4px'
+                                      }}
+                                      onClick={() => {
+                                        slot.updateState((draft) => {
+                                          const userIsExists =
+                                            draft.userList?.find(
+                                              ({ info }) => info === option.info
+                                            )
+                                          draft.addUserIsOpen = false
+                                          !userIsExists &&
+                                            draft.userList?.push(option)
+                                        })
+                                      }}
+                                    >
+                                      {option.name}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            ''
+                          )}
+                        </span>
+                        <span
+                          class={timeClass}
+                          onClick={(e: MouseEvent) => {
+                            e.stopPropagation()
+                            if (openSetTimeModal) {
+                              openSetTimeModal(e, options)
+                            }
+                          }}
+                        >
+                          {state.time + ' '}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )
       }
     }
@@ -144,10 +322,12 @@ export const todolistComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-todolist {
+.tb-todolist {
   display: block;
-  margin-top: 1em;
   margin-bottom: 1em;
+}
+.tb-todolist:not(:first-child) {
+  margin-top: 1em;
 }
 .tb-todolist-item {
   padding-top: 0.2em;
@@ -155,14 +335,15 @@ tb-todolist {
   display: flex;
 }
 .tb-todolist-btn {
+  display: flex;
+  align-items: center;
   margin-right: 0.6em;
 }
 .tb-todolist-state {
   display: inline-block;
-  margin-top: 3px;
   width: 12px;
   height: 12px;
-  border: 2px solid #1296db;
+  border: 2px solid #000000;
   background: #fff;
   border-radius: 3px;
   cursor: pointer;
@@ -172,8 +353,8 @@ tb-todolist {
 .tb-todolist-state:after {
   content: "";
   position: absolute;
-  border-right: 2px solid #fff;
-  border-bottom: 2px solid #fff;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
   box-sizing: content-box;
   left: 3px;
   top: 1px;
@@ -181,8 +362,12 @@ tb-todolist {
   height: 6px;
   transform: rotateZ(45deg);
 }
-.tb-todolist-state-active:after {
-  border-color: #1296db;
+.tb-todolist-state-active .tb-todolist-state {
+  background: #000000;
+}
+.tb-todolist-state-active .tb-todolist-content {
+  text-decoration: line-through;
+  color: #999999;
 }
 .tb-todolist-state-disabled {
   opacity: 0.5;
@@ -190,29 +375,144 @@ tb-todolist {
 .tb-todolist-content {
   flex: 1;
 }
+
+.info_box {
+  margin-left: 6px;
+  border-left: 1px solid rgba(31, 35, 41, 0.15);
+  padding-left: 6px;
+}
+.mention {
+  border-radius: 10px;
+  line-height: 22px;
+  background-color: rgba(130, 167, 252, 0.18);
+  color: #1f2329;
+  padding: 0 8px;
+  margin-right: 6px;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+.cross {
+  width: 22px;
+  height: 22px;
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-radius: 50%;
+  background-color: #bacefd;
+}
+.cross::before,
+.cross::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  background-color: #646a73;
+  height: 11px;
+  left: 11px;
+  top: 5px;
+}
+.cross::before {
+  transform: rotate(45deg);
+}
+.cross::after {
+  transform: rotate(-45deg);
+}
+.mention:hover {
+  background-color: #bacefd;
+}
+.mention:hover .cross {
+  display: inline-block;
+}
+.add_user {
+  position: relative;
+  border-radius: 4px;
+  height: 20px;
+  padding-left: 21px;
+  margin-right: 8px;
+  transition: 0.2s all;
+  cursor: pointer;
+}
+.add_user::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  background-color: rgba(31, 35, 41, 0.15);
+  height: 12px;
+  right: -9px;
+  top: 5px;
+}
+.add_user:hover {
+  background-color: rgba(214, 220, 232, 1);
+}
+.background_normal {
+  display: inline-block;
+  transform: translateY(-1px);
+  color: #999999;
+  line-height: 22px;
+  cursor: pointer;
+  height: 22px;
+  padding-left: 26px;
+  padding-right: 6px;
+  background-size: 16px 16px;
+  background-position: 5px center;
+  background-repeat: no-repeat;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: 4px;
+  color: #646a73;
+  transition: 0.2s all;
+  margin-left: 9px;
+}
+.background_normal:hover {
+  background-color: rgba(214, 220, 232, 1);
+}
+.background_no_time {
+  padding-left: 16px;
+}
 `
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.nodeName.toLowerCase() === 'tb-todolist'
+    return (
+      element.tagName === 'DIV' &&
+      element.getAttribute('component-name') === 'TodoComponent'
+    )
   },
-  read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
-    const listConfig = Array.from(element.children).map(child => {
+  read(
+    element: HTMLElement,
+    context: Injector,
+    slotParser: SlotParser
+  ): ComponentInstance {
+    const listConfig = Array.from(element.children).map((child) => {
       const stateElement = child.querySelector('.tb-todolist-state')
+      const userList = child.getAttribute('user-list') || ''
+      const time = child.getAttribute('todo-time') || ''
+
       return {
         childSlot: child.querySelector('.tb-todolist-content') as HTMLElement,
-        slot: new Slot<TodoListSlotState>([
-          ContentType.Text,
-          ContentType.InlineComponent
-        ], {
-          active: !!stateElement?.classList.contains('tb-todolist-state-active'),
-          disabled: !!stateElement?.classList.contains('tb-todolist-state-disabled')
-        })
+        slot: new Slot<TodoListSlotState>(
+          [ContentType.Text, ContentType.InlineComponent],
+          {
+            active: !!stateElement?.classList.contains(
+              'tb-todolist-state-active'
+            ),
+            disabled: !!stateElement?.classList.contains(
+              'tb-todolist-state-disabled'
+            ),
+            time,
+            userList: parse(userList),
+            addUserIsOpen: false,
+            searchText: '',
+            positionId: nanoid()
+          }
+        )
       }
     })
 
     return todolistComponent.createInstance(context, {
-      slots: listConfig.map(i => {
+      slots: listConfig.map((i) => {
         return slotParser(i.slot, i.childSlot)
       })
     })

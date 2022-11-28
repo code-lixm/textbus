@@ -78,13 +78,13 @@ export const alertComponent = defineComponent({
           classes.push('tb-alert-' + state.type)
         }
         return (
-          <tb-alert data-type={state.type} class={classes.join(' ')}>
+          <div component-name='AlertComponent' data-type={state.type} class={classes.join(' ')}>
             {
               slotRender(slots.get(0)!, () => {
                 return <div/>
               })
             }
-          </tb-alert>
+          </div>
         )
       }
     }
@@ -105,13 +105,13 @@ export const alertComponentLoader: ComponentLoader = {
 }
 
 .tb-alert.tb-alert-primary {
-  border-color: rgba(18, 150, 219, 0.3);
-  background-color: rgba(18, 150, 219, 0.15)
+  border-color: rgba(95,130,255,.12);
+  background-color: rgba(95, 130, 255, 0.15)
 }
 
 .tb-alert.tb-alert-primary.tb-alert-fill {
   color: #fff;
-  background-color: #1296db
+  background-color: #5f82ff
 }
 
 .tb-alert.tb-alert-success {
@@ -181,7 +181,7 @@ export const alertComponentLoader: ComponentLoader = {
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.tagName.toLowerCase() === 'tb-alert'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'AlertComponent'
   },
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
     return alertComponent.createInstance(context, {

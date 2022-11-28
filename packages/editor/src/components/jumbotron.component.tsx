@@ -33,9 +33,9 @@ export function createJumbotronSlot(injector: Injector) {
     ContentType.BlockComponent
   ])
   const h1 = headingComponent.createInstance(injector)
-  h1.slots.first!.insert('Hello, world!')
+  h1.slots.first!.insert('您好！')
   const p1 = paragraphComponent.createInstance(injector)
-  p1.slots.first!.insert('你好，我是 Textbus，一个给你带来全新体验的富文本开发框架。')
+  p1.slots.first!.insert('云深寻迹给您带来全新的文档体验。')
   const p2 = paragraphComponent.createInstance(injector)
   p2.slots.first!.insert('现在我们开始吧！')
 
@@ -122,7 +122,7 @@ export const jumbotronComponent = defineComponent({
     return {
       render(isOutputMode: boolean, slotRender): VElement {
         return (
-          <tb-jumbotron style={{
+          <div component-name='JumbotronComponent' class='tb-jumbotron' style={{
             backgroundImage: state.backgroundImage ? `url("${state.backgroundImage}")` : null,
             backgroundSize: state.backgroundSize || 'cover',
             backgroundPosition: state.backgroundPosition || 'center',
@@ -135,10 +135,10 @@ export const jumbotronComponent = defineComponent({
             }
             {
               slotRender(slots.get(0)!, () => {
-                return <div/>
+                return <div />
               })
             }
-          </tb-jumbotron>
+          </div>
         )
       }
     }
@@ -149,7 +149,7 @@ export const jumbotronComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-jumbotron {
+.tb-jumbotron {
   display: block;
   min-height: 200px;
   margin-bottom: 1em;
@@ -163,11 +163,11 @@ tb-jumbotron {
     ],
     editModeStyles: [
       // eslint-disable-next-line max-len
-      '.tb-jumbotron-setting { display:none; border-radius: 4px; font-size: 14px;position: absolute; right: 10px; top: 10px; background: #fff; box-shadow: 1px 2px 3px rgba(0,0,0,.1); color: #333; border: 0; outline: none; cursor: pointer;}.tb-jumbotron-setting:hover{color: #1296db} tb-jumbotron:hover .tb-jumbotron-setting{display:block} '
+      '.tb-jumbotron-setting { display:none; border-radius: 4px; font-size: 14px;position: absolute; right: 10px; top: 10px; background: #fff; box-shadow: 1px 2px 3px rgba(0,0,0,.1); color: #333; border: 0; outline: none; cursor: pointer;}.tb-jumbotron-setting:hover{color: #5f82ff} .tb-jumbotron:hover .tb-jumbotron-setting{display:block} '
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.nodeName.toLowerCase() === 'tb-jumbotron'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'JumbotronComponent'
   },
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
     const style = element.style

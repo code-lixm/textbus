@@ -47,7 +47,7 @@ class MarginSetter implements FormItem<string> {
           classes: ['textbus-control-static'],
           children: [
             createElement('div', {
-              classes: ['textbus-toolbar-image-margin-setter'],
+              classes: ['textbus-toolbar-image-margin-setting'],
               children: Array.from({ length: 4 }).fill(null).map(() => createElement('input', {
                 attrs: {
                   type: 'text',
@@ -119,7 +119,7 @@ class SizeSetter implements FormItem {
           classes: ['textbus-control-value'],
           children: [
             createElement('div', {
-              classes: ['textbus-toolbar-image-size-setter'],
+              classes: ['textbus-toolbar-image-size-setting'],
               children: [
                 createElement('input', {
                   attrs: { type: 'text', placeholder: i18n.get('widthPlaceholder') },

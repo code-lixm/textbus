@@ -50,7 +50,7 @@ export class Editor extends Viewer {
           provide: FileUploader,
           useFactory(selection: Selection, message: Message, i18n: I18n) {
             return {
-              upload: (config: UploadConfig): Observable<string | string[]> => {
+              upload: (config: UploadConfig) => {
                 if (!selection.isSelected) {
                   selection.usePaths({
                     anchor: [0, 0],

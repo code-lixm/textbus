@@ -55,7 +55,7 @@ export const katexComponent = defineComponent({
     const i18n = injector.get(I18n)
     const dialog = injector.get(Dialog)
 
-    const childI18n = i18n.getContext('components.katexComponent.setter')
+    const childI18n = i18n.getContext('components.katexComponent.setting')
 
     function changeSource() {
       const form = new Form({
@@ -110,9 +110,9 @@ export const katexComponent = defineComponent({
         const dom = new DOMParser().parseFromString(htmlString, 'text/html').body.children[0] as HTMLElement
 
         return (
-          <tb-katex source={encodeURIComponent(state.source)} onClick={changeSource}>
+          <span component-name='KatexComponent' class='tb-katex' source={encodeURIComponent(state.source)} onClick={changeSource}>
             {dom ? [domToVDom(dom)] : []}
-          </tb-katex>
+          </span>
         )
       }
     }
@@ -122,11 +122,11 @@ export const katexComponent = defineComponent({
 export const katexComponentLoader: ComponentLoader = {
   resources: {
     styles: [
-      'tb-katex, .katex-display, .katex, .katex-html{display: inline-block} tb-katex{margin-left: 0.5em; margin-right: 0.5em}'
+      '.tb-katex, .katex-display, .katex, .katex-html{display: inline-block} .tb-katex{margin-left: 0.5em; margin-right: 0.5em}'
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.tagName.toLowerCase() === 'tb-katex'
+    return element.tagName === 'span' && element.getAttribute('component-name') === 'KatexComponent'
   },
   read(element: HTMLElement, context: Injector): ComponentInstance {
     return katexComponent.createInstance(context, {

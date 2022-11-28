@@ -71,7 +71,7 @@ export function formatPainterToolConfigFactory(injector: Injector): ButtonToolCo
 
       startSlot.changeMarker.forceMarkChanged()
       const { Text, InlineComponent, BlockComponent } = ContentType
-      fromEvent(doc, 'mouseup').pipe(take(1), delay(10)).subscribe(() => {
+      fromEvent(doc as HTMLElement, 'mouseup').pipe(take(1), delay(10)).subscribe(() => {
         isActive = false
         commander.cleanFormats([linkFormatter])
         formats.forEach(i => {

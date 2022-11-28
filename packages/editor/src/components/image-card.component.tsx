@@ -119,7 +119,7 @@ export const imageCardComponent = defineComponent({
     return {
       render(_, slotRender): VElement {
         return (
-          <tb-image-card data-src={state.src} data-height={state.height}>
+          <div component-name='ImageCardComponent' class='tb-image-card' data-src={state.src} data-height={state.height}>
             <div onClick={showForm}>
               <img src={state.src} style={{
                 height: state.height
@@ -130,7 +130,7 @@ export const imageCardComponent = defineComponent({
                 return <p/>
               })
             }
-          </tb-image-card>
+          </div>
         )
       }
     }
@@ -141,7 +141,7 @@ export const imageCardComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-image-card {
+.tb-image-card {
   display: block;
   margin-top: 10px;
   margin-bottom: 20px;
@@ -149,12 +149,12 @@ tb-image-card {
   border-radius: 3px;
   overflow: hidden;
 }
-tb-image-card > div > img {
+.tb-image-card > div > img {
   width: 100%;
   display: block;
   min-height: 40px;
 }
-tb-image-card > p {
+.tb-image-card > p {
   margin: 0;
   text-align: center;
   font-size: 15px;
@@ -168,7 +168,7 @@ tb-image-card > p {
     ]
   },
   match(element: HTMLElement): boolean {
-    return element.nodeName.toLowerCase() === 'tb-image-card'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'ImageCardComponent'
   },
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {
     const p = element.querySelector('p')

@@ -18,7 +18,7 @@ export class LinkJumpTipPlugin implements Plugin {
     this.link.className = 'textbus-link-jump-plugin'
     this.subs.push(
       selection.onChange.pipe(delay()).subscribe(() => {
-        this.onSelectionChange(document, selection, nativeSelectionBridge, container)
+        this.onSelectionChange(document, selection, nativeSelectionBridge, container as HTMLElement)
       })
     )
   }

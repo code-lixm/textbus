@@ -28,7 +28,7 @@
     height: 14px;
     border-radius: 50%;
     background: #dddee1;
-    border: 2px solid #1296db;
+    border: 2px solid #5f82ff;
     box-sizing: border-box;
     pointer-events: auto;
     cursor: pointer;
@@ -38,7 +38,7 @@
 
     &:hover {
       background-color: #fff;
-      box-shadow: 0 0 0 3px rgba(18, 150, 219, 0.3);
+      box-shadow: 0 0 0 3px rgba(95,130,255,.12);
     }
 
     &:nth-child(1), &:nth-child(2), &:nth-child(3) {

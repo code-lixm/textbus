@@ -145,6 +145,12 @@ export const i18n_en_US: I18NConfig = {
           confirmBtnText: 'ok',
         }
       },
+      attachmentTool: {
+        tooltip: 'attachment',
+        view: {
+          uploadBtnText: 'upload attachment'
+        }
+      },
       inlineMarginTool: {
         label: 'inline margin',
         tooltip: 'inline margin',
@@ -341,6 +347,9 @@ export const i18n_en_US: I18NConfig = {
       componentsTool: {
         tooltip: 'component library',
       },
+      todolistTool: {
+        tooltip: 'todo'
+      }
     },
     linkJump: {
       accessLink: 'open'
@@ -454,7 +463,7 @@ export const i18n_en_US: I18NConfig = {
       creator: {
         name: 'Mathematical formula'
       },
-      setter: {
+      setting: {
         title: 'mathematical formula setting',
         label: 'source code',
         placeholder: 'please...',
@@ -481,12 +490,28 @@ export const i18n_en_US: I18NConfig = {
       creator: {
         name: 'Word explain'
       },
-      setter: {
+      setting: {
         title: 'word explain setting',
         confirmBtnText: 'ok',
         cancelBtnText: 'cancel',
         widthInputPlaceholder: 'title box width',
         widthLabel: 'width'
+      }
+    },
+    iframeComponent: {
+      creator: {
+        name: 'insert iframe'
+      },
+      setting: {
+      }
+    },
+    attachmentComponent: {
+      creator: {
+        name: 'attachment setting'
+      },
+      setting: {
+        name: 'attachment name',
+        namePlaceholder: 'please type attachment name'
       }
     }
   }

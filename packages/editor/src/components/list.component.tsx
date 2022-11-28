@@ -35,7 +35,7 @@ export const listComponent = defineComponent({
   separable: true,
   zenCoding: {
     key: ' ',
-    match: /^(1\.|[+*])$/,
+    match: /^(1\.|[-+*])$/,
     generateInitData(content: string) {
       return {
         state: /[-+*]/.test(content) ? 'ul' : 'ol'

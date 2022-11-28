@@ -56,7 +56,7 @@ export const wordExplainComponent = defineComponent({
       ev.preventDefault()
     })
 
-    const childI18n = i18n.getContext('components.wordExplainComponent.setter')
+    const childI18n = i18n.getContext('components.wordExplainComponent.setting')
 
     function setting() {
       const form = new Form({
@@ -98,27 +98,27 @@ export const wordExplainComponent = defineComponent({
     })
 
     return {
-      render(isOutputMode: boolean, slotRenderFn: SlotRender): VElement {
+      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
         return (
-          <tb-word-explain>
+          <div component-name='WordExplainComponent' class='tb-word-explain'>
             <div class="tb-word-explain-title-group" style={{ width: state.width }}>
-              {slotRenderFn(slots.get(0)!, () => {
-                return <div class="tb-word-explain-title"/>
+              {slotRender(slots.get(0)!, () => {
+                return <div class="tb-word-explain-title" />
               })}
-              {slotRenderFn(slots.get(1)!, () => {
-                return <div class="tb-word-explain-subtitle"/>
+              {slotRender(slots.get(1)!, () => {
+                return <div class="tb-word-explain-subtitle" />
               })}
             </div>
-            {slotRenderFn(slots.get(2)!, () => {
-              return <div class="tb-word-explain-detail"/>
+            {slotRender(slots.get(2)!, () => {
+              return <div class="tb-word-explain-detail" />
             })}
             {
               !isOutputMode && <span class="tb-word-explain-close" onClick={() => {
                 commander.removeComponent(self)
               }
-              }/>
+              } />
             }
-          </tb-word-explain>
+          </div>
         )
       }
     }
@@ -129,7 +129,7 @@ export const wordExplainComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-tb-word-explain {
+.tb-word-explain {
   display: flex;
   margin-top: 1em;
   margin-bottom: 1em;
@@ -157,7 +157,7 @@ tb-word-explain {
   border-left: 1px solid #ddd;
 }
 @media screen and (max-width: 767px) {
-  tb-word-explain {
+  .tb-word-explain {
     display: block;
   }
   .tb-word-explain-title-group {
@@ -182,10 +182,10 @@ tb-word-explain {
     ],
     editModeStyles: [
       `
-tb-word-explain {
+.tb-word-explain {
   position: relative;
 }
-tb-word-explain:hover .tb-word-explain-close {
+.tb-word-explain:hover .tb-word-explain-close {
   display: block;
 }
 .tb-word-explain-close {
@@ -207,7 +207,7 @@ tb-word-explain:hover .tb-word-explain-close {
     ]
   },
   match(element: Element): boolean {
-    return element.nodeName.toLowerCase() === 'tb-word-explain'
+    return element.tagName === 'DIV' && element.getAttribute('component-name') === 'WordExplainComponent'
   },
 
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance {

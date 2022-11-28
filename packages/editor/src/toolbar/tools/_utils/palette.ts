@@ -15,7 +15,7 @@ export class Palette {
     '#ff9900',
     '#15bd9a',
     '#6ad1ec',
-    '#1296db']
+    '#5f82ff']
   elementRef = document.createElement('div')
   onComplete: Observable<string | null>
 
