@@ -36,7 +36,6 @@ export interface TodoModalOptions {
   setTodoState: (state: TodoListSlotState) => void;
 }
 
-
 const nanoid = () => Math.random().toString(36).substr(2)
 
 export const todolistComponent = defineComponent({
@@ -431,7 +430,7 @@ export const todolistComponentLoader: ComponentLoader = {
 .mention:hover .cross {
   display: inline-block;
 }
-.add_user_readonly{
+.add_user_readonly {
   display: none;
 }
 .add_user {

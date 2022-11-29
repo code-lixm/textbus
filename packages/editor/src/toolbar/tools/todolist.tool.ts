@@ -5,6 +5,9 @@ import { ButtonTool, ButtonToolConfig } from '../toolkit/_api'
 import { I18n } from '../../i18n'
 import { todolistComponent, TodoListSlotState } from '../../components/todolist.component'
 
+
+const nanoid = () => Math.random().toString(36).substr(2)
+
 export function todolistToolConfigFactory(injector: Injector): ButtonToolConfig {
   const i18n = injector.get(I18n)
   const commander = injector.get(Commander)
@@ -31,7 +34,17 @@ export function todolistToolConfigFactory(injector: Injector): ButtonToolConfig 
     onClick() {
       const todo = todolistComponent.createInstance(injector, {
         slots: [
-          new Slot<TodoListSlotState>([ContentType.Text, ContentType.InlineComponent])
+          new Slot<TodoListSlotState>(
+            [ContentType.Text, ContentType.InlineComponent],
+            {
+            active: false,
+            disabled: false,
+            endTime: '',
+            userList: [],
+            addUserIsOpen: false,
+            searchText: '',
+            positionId: nanoid()
+          })
         ]
       })
       commander.insertAfter(todo, selection.commonAncestorComponent!)
