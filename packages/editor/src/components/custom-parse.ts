@@ -1,6 +1,6 @@
 interface userInfo {
-  info: string
-  name: string
+  authId: string
+  username: string
 }
 
 type userList = userInfo[]
@@ -9,8 +9,8 @@ function parse(str = '') {
   const infoStr = str.split(';;')
   const userList = infoStr.map((itemStr) => {
     if (itemStr) {
-      const [name, info] = itemStr.split('&&')
-      return { name, info }
+      const [username, authId] = itemStr.split('&&')
+      return { username, authId }
     }
     return itemStr
   })
@@ -20,11 +20,11 @@ function parse(str = '') {
 
 function stringify(userList: userList) {
   let str = ''
-  userList.forEach(({ info, name }) => {
-    const itemStr = `${name}&&${info};;`
+  userList.forEach(({ authId, username }) => {
+    const itemStr = `${username}&&${authId};;`
     str += itemStr
   })
   return str
 }
 
-export { parse, stringify,userList }
+export { parse, stringify, userList }

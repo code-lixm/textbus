@@ -46,7 +46,7 @@ export const mentionComponent = defineComponent({
     const commander = injector.get(Commander)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const { shareUsers } = options.moduleAPI?.mention || {
-      shareUsers: []
+      shareUsers: [{username:'www',authId:'123'}]
     }
 
     let state = initData?.state || {
@@ -109,7 +109,7 @@ export const mentionComponent = defineComponent({
         )
         !userIsExists &&
           parentSlot.updateState((draft) => {
-            draft.userList.push({ name: option.username, info: option.authId })
+            draft.userList.push({ username: option.username, authId: option.authId })
           })
         commander.removeComponent(self)
         return

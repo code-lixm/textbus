@@ -18,11 +18,12 @@ import { paragraphComponent } from './paragraph.component'
 import { parse, stringify, userList } from './custom-parse'
 
 import { EditorOptions } from '../types'
+import { Editor } from '../editor'
 
 export interface TodoListSlotState {
   active: boolean
   disabled: boolean
-  time?: string
+  endTime?: string
   userList?: userList
   addUserIsOpen: boolean
   searchText: string,
@@ -56,7 +57,7 @@ export const todolistComponent = defineComponent({
             {
               active: isChecked,
               disabled: false,
-              time: '',
+              endTime: '',
               userList: [],
               addUserIsOpen: false,
               searchText: '',
@@ -73,7 +74,7 @@ export const todolistComponent = defineComponent({
       initData.slots || [new Slot<TodoListSlotState>([Text, InlineComponent], {
         active: false,
         disabled: false,
-        time: '',
+        endTime: '',
         userList: [],
         addUserIsOpen: false,
         searchText: '',
@@ -88,7 +89,9 @@ export const todolistComponent = defineComponent({
 
     const self = useSelf()
     const selection = injector.get(Selection)
-    const commander = injector.get(Commander)
+    const commander = injector.get(Commander)    
+    const editor = injector.get(Editor)
+    const readonly = editor.readonly
 
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const { openSetTimeModal } = options.moduleAPI?.todo || {}
@@ -117,7 +120,7 @@ export const todolistComponent = defineComponent({
         nextSlot.state = {
           active: false,
           disabled: false,
-          time: '',
+          endTime: '',
           userList: [],
           addUserIsOpen: false,
           searchText: '',
@@ -137,7 +140,7 @@ export const todolistComponent = defineComponent({
               const state = slot.state || {
                 active: false,
                 disabled: false,
-                time: '',
+                endTime: '',
                 userList: [],
                 addUserIsOpen: false,
                 searchText: '',
@@ -153,23 +156,27 @@ export const todolistComponent = defineComponent({
                 classes.push('tb-todolist-state-disabled')
               }
               const options: TodoModalOptions = {
-                time: state.time || '',
+                time: state.endTime || '',
                 userList: state.userList || [],
                 setTodoState: ({
-                  time = state.time,
+                  endTime = state.endTime,
                   userList = state.userList
                 }: TodoListSlotState) => {
                   slot.updateState((draft) => {
-                    draft.time = time
+                    draft.endTime = endTime
                     draft.userList = userList
                   })
                 }
               }
 
               const userList = stringify(state.userList || [])
-              const timeClass = state.time
+              let timeClass = state.endTime
                 ? 'background_normal'
                 : 'background_normal background_no_time'
+              if(readonly) timeClass+=' background_readonly'
+              const addUserClass = readonly
+              ? 'add_user add_user_readonly'
+              : 'add_user'
 
               const searchedList = shareUsers.filter((item) =>
                 item.username.includes(state.searchText)
@@ -178,14 +185,14 @@ export const todolistComponent = defineComponent({
                 (item) => !item.username.includes(state.searchText)
               )
               const filterUserList = [...searchedList, ...unSearchedList].map(
-                ({ username, authId }) => ({ name: username, info: authId })
+                ({ username, authId }) => ({ username, authId })
               )
 
               return (
                 <div
                   class={classes.join(' ')}
                   user-list={userList}
-                  todo-time={state.time}
+                  todo-time={state.endTime}
                 >
                   <div class="tb-todolist-btn">
                     <div
@@ -204,15 +211,15 @@ export const todolistComponent = defineComponent({
                     {state.userList?.length ? (
                       <span class="info_box">
                         <span>
-                          {state.userList?.map(({ name, info }) => (
+                          {state.userList?.map(({ username, authId }) => (
                             <span class="mention">
-                              @{name}
+                              @{username}
                               <span
                                 class="cross"
                                 onClick={() => {
                                   slot.updateState((draft) => {
                                     draft.userList = draft.userList?.filter(
-                                      ({ info: id }) => id !== info
+                                      ({ authId: id }) => id !== authId
                                     )
                                   })
                                 }}
@@ -221,7 +228,7 @@ export const todolistComponent = defineComponent({
                           ))}
                         </span>
                         <span
-                          class="add_user"
+                          class={addUserClass}
                           onClick={() => {
                             slot.updateState((draft) => {
                               draft.addUserIsOpen = true
@@ -265,7 +272,7 @@ export const todolistComponent = defineComponent({
                                 {filterUserList.map((option) => {
                                   return (
                                     <div
-                                      key={option.info}
+                                      key={option.authId}
                                       style={{
                                         whiteSpace: 'nowrap',
                                         cursor: 'pointer',
@@ -276,7 +283,7 @@ export const todolistComponent = defineComponent({
                                         slot.updateState((draft) => {
                                           const userIsExists =
                                             draft.userList?.find(
-                                              ({ info }) => info === option.info
+                                              ({ authId }) => authId === option.authId
                                             )
                                           draft.addUserIsOpen = false
                                           !userIsExists &&
@@ -284,7 +291,7 @@ export const todolistComponent = defineComponent({
                                         })
                                       }}
                                     >
-                                      {option.name}
+                                      {option.username}
                                     </div>
                                   )
                                 })}
@@ -303,7 +310,7 @@ export const todolistComponent = defineComponent({
                             }
                           }}
                         >
-                          {state.time + ' '}
+                          {state.endTime + ' '}
                         </span>
                       </span>
                     ) : null}
@@ -424,6 +431,9 @@ export const todolistComponentLoader: ComponentLoader = {
 .mention:hover .cross {
   display: inline-block;
 }
+.add_user_readonly{
+  display: none;
+}
 .add_user {
   position: relative;
   border-radius: 4px;
@@ -444,6 +454,10 @@ export const todolistComponentLoader: ComponentLoader = {
 }
 .add_user:hover {
   background-color: rgba(214, 220, 232, 1);
+}
+.background_readonly: hover{
+  background-color: white;
+  cursor: default;
 }
 .background_normal {
   display: inline-block;
@@ -488,7 +502,7 @@ export const todolistComponentLoader: ComponentLoader = {
     const listConfig = Array.from(element.children).map((child) => {
       const stateElement = child.querySelector('.tb-todolist-state')
       const userList = child.getAttribute('user-list') || ''
-      const time = child.getAttribute('todo-time') || ''
+      const endTime = child.getAttribute('todo-time') || ''
 
       return {
         childSlot: child.querySelector('.tb-todolist-content') as HTMLElement,
@@ -501,7 +515,7 @@ export const todolistComponentLoader: ComponentLoader = {
             disabled: !!stateElement?.classList.contains(
               'tb-todolist-state-disabled'
             ),
-            time,
+            endTime,
             userList: parse(userList),
             addUserIsOpen: false,
             searchText: '',
