@@ -6,7 +6,7 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext,
+  useState, onContextMenu, useContext
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/browser'
 import { Subscription } from '@tanbo/stream'

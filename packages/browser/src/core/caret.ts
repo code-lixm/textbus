@@ -107,7 +107,7 @@ export class Caret {
     this.elementRef = createElement('div', {
       styles: {
         position: 'absolute',
-        width: '2px',
+        width: '1px',
         pointerEvents: 'none'
       },
       children: [

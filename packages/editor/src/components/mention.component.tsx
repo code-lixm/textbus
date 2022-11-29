@@ -72,11 +72,11 @@ export const mentionComponent = defineComponent({
 
     // 组件初始化完成
     onViewInit(() => {
+      if(state.isSelected) {
+        mentionMenu.current!.style.display = 'none'
+      }
       // 存在
       if (users.length) {
-        if (state.isSelected) {
-          mentionMenu.current!.style.display = 'none'
-        }
         searchInput.current?.focus()
         self.changeMarker.forceMarkDirtied()
       } else {
@@ -232,7 +232,7 @@ export const mentionComponentLoader: ComponentLoader = {
 .mention-selected {
   border: 1px solid #3370ff;
   padding: 0 6px;
-  border-radius: 12px;
+  border-radius: 18px;
   background-color: #3370ff;
   white-space: nowrap;
   color: #ffffff;

@@ -10,14 +10,13 @@ import {
   Controller,
   onViewInit,
   useSelf,
-  Commander
+  Commander,
 } from '@textbus/core'
 import { ComponentLoader } from '@textbus/browser'
 import { Injector } from '@tanbo/di'
 import { Dialog } from '../dialog'
 import { Form, FormTextField } from '../uikit/forms/_api'
 import { I18n } from '../i18n'
-
 export interface AttachmentComponentState {
   url: string
   name: string
@@ -37,6 +36,7 @@ export const attachmentComponent = defineComponent({
       url: '',
       name: `${new Date().toLocaleString()}`
     }
+
     const stateController = useState(state)
     const self = useSelf()
 
@@ -97,11 +97,15 @@ export const attachmentComponent = defineComponent({
         return (
           <span component-name="AttachmentComponent" class="tb-attachment">
             {readonly ? (
-              <a title={state.url} href={state.url} download={state.name}>
-                {state.name}
+              <a title={state.name} href={state.url} download={state.name}>
+                <span class='textbus-icon-attachment'></span>
+                <span>{state.name}</span>
               </a>
             ) : (
-              <span title={state.url} onClick={showForm}>{state.name}</span>
+              <span title={state.name} onClick={showForm}>
+                <span class='textbus-icon-attachment'></span>
+                <span>{state.name}</span>
+              </span>
             )}
           </span>
         )
@@ -119,8 +123,11 @@ export const attachmentComponentLoader: ComponentLoader = {
   white-space: nowrap;
   background: #f3f4f5;
   border-radius: 4px;
-  padding: 0 4px;
-  color: #5
+  padding: 0 10px;
+  cursor: pointer;
+}
+.tb-attachment:hover {
+  background: #f1f1f1;
 }
 `
     ]
