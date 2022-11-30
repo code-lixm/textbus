@@ -45,16 +45,14 @@ export const mentionComponent = defineComponent({
     const selection = injector.get(Selection)
     const commander = injector.get(Commander)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
-    const { shareUsers } = options.moduleAPI?.mention || {
-      shareUsers: []
-    }
 
     let state = initData?.state || {
       isSelected: false,
       authId: '',
       username: ''
     }
-    let users = shareUsers.slice()
+    let users = options.moduleAPI?.getShareUsers().slice() || []
+    const currentUserInfo = options.moduleAPI?.getCurrentUserInfo() || {name: ''}
 
     const mentionMenu = useRef<HTMLElement>()
     const searchInput = useRef<HTMLElement>()
@@ -149,15 +147,18 @@ export const mentionComponent = defineComponent({
         commander.removeComponent(self)
         commander.insert('@' + searchText)
       }
-      ev.preventDefault()
     }
 
     return {
       render(_, slotRender: SlotRender): VElement {
+        let classes = ''
+        if(state.isSelected) {
+          classes = state.username === currentUserInfo.name ? 'mention-selected-self' : 'mention-selected'
+        }
         return (
           <span
             component-name="MentionComponent"
-            class={state.isSelected ? 'mention-selected' : ''}
+            class={classes}
             style={{ display: 'inline-block' }}
             data-authId={state.authId}
             data-username={state.username}
@@ -229,13 +230,22 @@ export const mentionComponentLoader: ComponentLoader = {
   resources: {
     styles: [
       `
-.mention-selected {
+.mention-selected-self {
   border: 1px solid #3370ff;
   padding: 0 6px;
   border-radius: 18px;
   background-color: #3370ff;
   white-space: nowrap;
   color: #ffffff;
+}
+.mention-selected {
+  border: 1px solid rgba(130, 167, 252, 0.18);
+  padding: 0 6px;
+  border-radius: 18px;
+  white-space: nowrap;
+  color: #ffffff;
+  background-color: rgba(130, 167, 252, 0.18);
+  color: #1f2329;
 }
 .mention-menu:hover {
   background: #f3f4f5;

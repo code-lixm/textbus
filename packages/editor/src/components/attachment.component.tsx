@@ -17,6 +17,7 @@ import { Injector } from '@tanbo/di'
 import { Dialog } from '../dialog'
 import { Form, FormTextField } from '../uikit/forms/_api'
 import { I18n } from '../i18n'
+import { getFileTypeByName } from './_api'
 export interface AttachmentComponentState {
   url: string
   name: string
@@ -98,12 +99,12 @@ export const attachmentComponent = defineComponent({
           <span component-name="AttachmentComponent" class="tb-attachment">
             {readonly ? (
               <a title={state.name} href={state.url} download={state.name}>
-                <span class='textbus-icon-attachment'></span>
+                <img src={getFileTypeByName(state.name)} style='max-wdith:20px;' />
                 <span>{state.name}</span>
               </a>
             ) : (
               <span title={state.name} onClick={showForm}>
-                <span class='textbus-icon-attachment'></span>
+                <img src={getFileTypeByName(state.name)} style='max-wdith:20px;' />
                 <span>{state.name}</span>
               </span>
             )}

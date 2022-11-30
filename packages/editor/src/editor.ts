@@ -12,6 +12,7 @@ import { ContextMenu } from './context-menu'
 import { Dialog } from './dialog'
 import { Message } from './message'
 import { FileUploader, UploadConfig } from './file-uploader'
+import { DEFAULT_MODULE_API } from './module-api'
 
 const editorErrorFn = makeError('Editor')
 
@@ -33,53 +34,57 @@ export class Editor extends Viewer {
       options.rootComponent || rootComponent,
       options.rootComponentLoader || rootComponentLoader,
       (() => {
-        const editorProviders: Provider[] = [{
-          provide: Layout,
-          useFactory: () => {
-            return this.layout
-          }
-        }, {
-          provide: I18n,
-          useValue: new I18n(i18n_zh_CN, options.i18n as any)
-        }, {
-          provide: Editor,
-          useFactory: () => {
-            return this
-          }
-        }, {
-          provide: FileUploader,
-          useFactory(selection: Selection, message: Message, i18n: I18n) {
-            return {
-              upload: (config: UploadConfig) => {
-                if (!selection.isSelected) {
-                  selection.usePaths({
-                    anchor: [0, 0],
-                    focus: [0, 0],
-                  })
-                  selection.restore()
-                }
-                if (typeof options.uploader === 'function') {
-                  const result = options.uploader(config)
-                  if (result instanceof Observable) {
-                    return result
-                  } else if (result instanceof Promise) {
-                    return fromPromise(result)
-                  } else if (typeof result === 'string') {
-                    return of(result)
-                  } else if (Array.isArray(result)) {
-                    return of(result)
-                  }
-                }
-                message.message(i18n.get('editor.noUploader'))
-                return config.multiple ? of([]) : of('')
-              }
-            }
+        const editorProviders: Provider[] = [
+          {
+            provide: Layout,
+            useFactory: () => {
+              return this.layout
+            },
           },
-          deps: [Selection, Message, I18n]
-        },
+          {
+            provide: I18n,
+            useValue: new I18n(i18n_zh_CN, options.i18n as any),
+          },
+          {
+            provide: Editor,
+            useFactory: () => {
+              return this
+            },
+          },
+          {
+            provide: FileUploader,
+            useFactory(selection: Selection, message: Message, i18n: I18n) {
+              return {
+                upload: (config: UploadConfig) => {
+                  if (!selection.isSelected) {
+                    selection.usePaths({
+                      anchor: [0, 0],
+                      focus: [0, 0],
+                    })
+                    selection.restore()
+                  }
+                  if (typeof options.uploader === 'function') {
+                    const result = options.uploader(config)
+                    if (result instanceof Observable) {
+                      return result
+                    } else if (result instanceof Promise) {
+                      return fromPromise(result)
+                    } else if (typeof result === 'string') {
+                      return of(result)
+                    } else if (Array.isArray(result)) {
+                      return of(result)
+                    }
+                  }
+                  message.message(i18n.get('editor.noUploader'))
+                  return config.multiple ? of([]) : of('')
+                },
+              }
+            },
+            deps: [Selection, Message, I18n],
+          },
           ContextMenu,
           Dialog,
-          Message
+          Message,
         ]
         options.providers = options.providers || []
         options.providers.push(...editorProviders)
@@ -88,6 +93,7 @@ export class Editor extends Viewer {
         options.editingStyleSheets.push(
           '[textbus-document=true]::before {content: attr(data-placeholder); position: absolute; opacity: 0.6;}'
         )
+        options.moduleAPI = {...DEFAULT_MODULE_API, ...options.moduleAPI}
         return options
       })()
     )
@@ -109,10 +115,12 @@ export class Editor extends Viewer {
       this.host = selector
     }
     if (!this.host || !(this.host instanceof HTMLElement)) {
-      throw editorErrorFn('selector is not an HTMLElement, or the CSS selector cannot find a DOM element in the document.')
+      throw editorErrorFn(
+        'selector is not an HTMLElement, or the CSS selector cannot find a DOM element in the document.'
+      )
     }
     this.host.append(this.layout.container)
-    return super.mount(this.layout.scroller).then(rootInjector => {
+    return super.mount(this.layout.scroller).then((rootInjector) => {
       rootInjector.get(ContextMenu)
       if (this.destroyed) {
         return rootInjector
@@ -126,12 +134,12 @@ export class Editor extends Viewer {
             const rect = scrollContainer.getBoundingClientRect()
             return {
               top: rect.top,
-              bottom: rect.top + rect.height
+              bottom: rect.top + rect.height,
             }
           },
           setOffset(offset: number) {
             scrollContainer.scrollTop += offset
-          }
+          },
         })
       }
       this.readyEvent.next(rootInjector)
@@ -144,12 +152,9 @@ export class Editor extends Viewer {
       return
     }
     if (this.injector) {
-      const types = [
-        ContextMenu,
-        Dialog
-      ]
+      const types = [ContextMenu, Dialog]
 
-      types.forEach(i => {
+      types.forEach((i) => {
         this.injector!.get(i as Type<{ destroy(): void }>).destroy()
       })
     }

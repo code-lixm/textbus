@@ -23,8 +23,8 @@ import { Editor } from '../editor'
 export interface TodoListSlotState {
   status: boolean
   disabled: boolean
-  endTime?: string
-  userList?: userList
+  endTime: string
+  userList: userList
   addUserIsOpen: boolean
   searchText: string
   positionId: string
@@ -100,10 +100,8 @@ export const todolistComponent = defineComponent({
     const readonly = editor.readonly
 
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
-    const { openSetTimeModal } = options.moduleAPI?.todo || {}
-    const { shareUsers } = options.moduleAPI?.mention || {
-      shareUsers: []
-    }
+    const { openSetTimeModal, updateTodoList } = options.moduleAPI || {}
+    const shareUsers = options.moduleAPI?.getShareUsers() || []
 
     onBreak((ev) => {
       const slot = ev.target
@@ -188,9 +186,13 @@ export const todolistComponent = defineComponent({
                     <div
                       class="tb-todolist-state"
                       onClick={() => {
+                        if(readonly && updateTodoList) {
+                          updateTodoList(state.positionId, state.status)
+                        }
                         slot.updateState((draft) => {
                           draft.status = !draft.status
                         })
+
                       }}
                     />
                   </div>

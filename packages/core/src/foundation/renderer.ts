@@ -597,7 +597,8 @@ export class Renderer {
       listenerChanges.remove.forEach(i => {
         this.nativeRenderer.unListen(nativeNode, i[0], i[1])
       })
-      if (!this.controller.readonly) {
+      // @ts-ignore
+      if (!this.controller.readonly || Array.from(nativeNode.classList).toString() === 'tb-todolist-state') {
         listenerChanges.add.forEach(i => {
           this.nativeRenderer.listen(nativeNode, i[0], i[1])
         })
@@ -854,7 +855,7 @@ export class Renderer {
     })
     vDom.classes.forEach(k => this.nativeRenderer.addClass(el, k))
 
-    if (!this.controller.readonly) {
+    if (!this.controller.readonly || vDom.classes.has('tb-todolist-state')) {
       Object.keys(vDom.listeners).forEach(type => {
         this.nativeRenderer.listen(el, type, vDom.listeners[type])
       })

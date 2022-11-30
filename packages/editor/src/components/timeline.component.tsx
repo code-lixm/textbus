@@ -77,7 +77,7 @@ export const timelineComponent = defineComponent({
                 }
                 return (
                   <div class={classes.join(' ')}>
-                    <div class="tb-timeline-line"/>
+                    <div class="tb-timeline-line" />
                     <div class="tb-timeline-icon" title={isOutput ? null : '点击切换颜色'} onClick={() => {
                       if (!type) {
                         slot.updateState(draft => {
@@ -88,16 +88,23 @@ export const timelineComponent = defineComponent({
                           draft.type = timelineTypes[timelineTypes.indexOf(type) + 1] as TimelineType || null
                         })
                       }
-                    }}/>
+                    }} />
                     {
-                      !isOutput && <span class="tb-timeline-add" onClick={() => {
-                        const index = slots.indexOf(slot) + 1
-                        slots.insertByIndex(createTimelineItem(injector, type), index)
-                      }}/>
+                      !isOutput &&
+                      <span>
+                        <span class="tb-timeline-plus" onClick={() => {
+                          slots.remove(slot)
+                        }} />
+                        <span class="tb-timeline-add" onClick={() => {
+                          const index = slots.indexOf(slot) + 1
+                          slots.insertByIndex(createTimelineItem(injector, type), index)
+                        }} />
+                      </span>
+
                     }
                     {
                       slotRender(slot, () => {
-                        return <div class="tb-timeline-content"/>
+                        return <div class="tb-timeline-content" />
                       })
                     }
                   </div>
@@ -178,20 +185,42 @@ export const timelineComponentLoader: ComponentLoader = {
   transform: scale(1.2);
   cursor: pointer;
 }
+.tb-timeline-plus {
+  display: none;
+  position: absolute;
+  right: 24px;
+  top: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #f3f4f5;
+  border-radius: 4px;
+  padding: 0 6px;
+}
+.tb-timeline-plus:hover {
+  background-color: #e8e8e8;
+}
+.tb-timeline-plus:before {
+  content: "-";
+}
+.tb-timeline-item:hover .tb-timeline-plus {
+  display: block;
+}
 .tb-timeline-add {
   display: none;
   position: absolute;
   right: 0;
-  top: 0;
-  font-size: 20px;
-  line-height: 1;
+  top: 5px;
+  font-size: 16px;
   cursor: pointer;
+  background-color: #f3f4f5;
+  border-radius: 4px;
+  padding: 0 6px;
+}
+.tb-timeline-add:hover {
+  background-color: #e8e8e8;
 }
 .tb-timeline-add:before {
   content: "+";
-}
-.tb-timeline-add:hover {
-  transform: scale(1.2);
 }
 
 .tb-timeline-item:hover .tb-timeline-add {

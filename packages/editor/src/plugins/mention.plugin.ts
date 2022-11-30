@@ -16,7 +16,7 @@ export class MentionPlugin implements Plugin {
     const selection = injector.get(Selection)
     const commander = injector.get(Commander)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
-    const { shareUsers } = options.moduleAPI?.mention || { shareUsers: []}
+    const shareUsers = options.moduleAPI?.getShareUsers().slice() || []
     const isValid = !!shareUsers.length
 
     keyboard.addShortcut({

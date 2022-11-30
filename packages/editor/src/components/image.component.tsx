@@ -105,7 +105,7 @@ class SizeSetter implements FormItem {
   private inputs: HTMLInputElement[] = []
 
   constructor(public name: string,
-              private i18n: I18n) {
+    private i18n: I18n) {
     this.elementRef = createElement('div', {
       classes: ['textbus-form-group'],
       children: [
@@ -210,7 +210,7 @@ export const imageComponent = defineComponent({
                 uploadBtnText: childI18n.get('uploadBtnText'),
                 fileUploader,
                 validateFn(value: string) {
-                  if (!value) {
+                  if (!(/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) {
                     return childI18n.get('validateErrorMessage')
                   }
                   return false
@@ -276,17 +276,25 @@ export const imageComponent = defineComponent({
       }])
     })
 
+    const onload = () => {
+      console.log('🚀 line 283 ~ onload ~ ref.current?.getBoundingClientRect()', ref.current?.getBoundingClientRect())
+
+      stateController.update(draft => {
+        Object.assign(draft, ref.current?.getBoundingClientRect())
+      })
+    }
+
     return {
       render(): VElement {
         return (
-          <img src={state.src} ref={ref} class="tb-img" style={{
+          <img onLoad={onload} src={state.src} ref={ref} class="tb-img" style={{
             width: state.width,
             height: state.height,
             maxWidth: state.maxWidth,
             maxHeight: state.maxHeight,
             margin: state.margin,
             float: state.float
-          }}/>
+          }} />
         )
       }
     }

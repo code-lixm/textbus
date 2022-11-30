@@ -1,7 +1,7 @@
 import { Injector } from '@tanbo/di'
 import { Commander, Query, QueryState, Selection } from '@textbus/core'
 
-import { Form, FormRadio, FormTextField } from '../../uikit/forms/_api'
+import { Form, FormTextField } from '../../uikit/forms/_api'
 import { linkFormatter } from '../../formatters/_api'
 import { I18n } from '../../i18n'
 import { DropdownTool, DropdownToolConfig } from '../toolkit/_api'
@@ -21,26 +21,24 @@ export function linkToolConfigFactory(injector: Injector): DropdownToolConfig {
         name: 'href',
         placeholder: childI18n.get('linkInputPlaceholder'),
         validateFn(value: any) {
-          const a = document.createElement('a')
-          a.href = value
-          if (a.hostname) {
-            return false
+          if(!(/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) {
+            return childI18n.get('invalidMessage')
           }
-          return childI18n.get('invalidMessage')
+          return false
         }
       }),
-      new FormRadio({
-        label: childI18n.get('jumpLabel'),
-        name: 'target',
-        values: [{
-          label: childI18n.get('jumpSelfLabel'),
-          value: '_self',
-          default: true
-        }, {
-          label: childI18n.get('jumpBlankLabel'),
-          value: '_blank'
-        }]
-      })
+      // new FormRadio({
+      //   label: childI18n.get('jumpLabel'),
+      //   name: 'target',
+      //   values: [{
+      //     label: childI18n.get('jumpSelfLabel'),
+      //     value: '_self',
+      //     default: true
+      //   }, {
+      //     label: childI18n.get('jumpBlankLabel'),
+      //     value: '_blank'
+      //   }]
+      // })
     ]
   })
   return {

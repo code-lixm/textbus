@@ -44,6 +44,14 @@ export const alertComponent = defineComponent({
     }
 
     const childI18n = i18n.getContext('components.alertComponent.contextMenu')
+    const tips = [
+      { name: '默认', type: 'default' },
+      { name: '普通', type: 'primary' },
+      { name: '提示', type: 'info' },
+      { name: '成功', type: 'success' },
+      { name: '警告', type: 'warning' },
+      { name: '危险', type: 'danger' },
+    ]
 
     onContextMenu(ev => {
       ev.useMenus([{
@@ -55,12 +63,12 @@ export const alertComponent = defineComponent({
         }
       }, {
         label: childI18n.get('type'),
-        submenu: 'default,primary,info,success,warning,danger,dark,gray'.split(',').map(i => {
+        submenu: tips.map(item => {
           return {
-            label: i,
+            label: item.name,
             onClick() {
               stateController.update(draft => {
-                draft.type = i
+                draft.type = item.type
               })
             }
           }
@@ -81,7 +89,7 @@ export const alertComponent = defineComponent({
           <div component-name='AlertComponent' data-type={state.type} class={classes.join(' ')}>
             {
               slotRender(slots.get(0)!, () => {
-                return <div/>
+                return <div />
               })
             }
           </div>

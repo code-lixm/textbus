@@ -3,7 +3,7 @@ import { Injector } from '@tanbo/di'
 
 import { DropdownTool, DropdownToolConfig } from '../toolkit/_api'
 import { I18n } from '../../i18n'
-import { Form, FormNumber, FormSwitch } from '../../uikit/forms/_api'
+import { Form, FormNumber } from '../../uikit/forms/_api'
 import { createCell, tableComponent } from '../../components/table.component'
 
 export function tableAddToolConfigFactory(injector: Injector): DropdownToolConfig {
@@ -25,11 +25,11 @@ export function tableAddToolConfigFactory(injector: Injector): DropdownToolConfi
         label: childI18n.get('columnLabel'),
         placeholder: childI18n.get('columnPlaceholder')
       }),
-      new FormSwitch({
-        label: childI18n.get('useTextbusStyleLabel'),
-        name: 'useTextbusStyle',
-        checked: true
-      })
+      // new FormSwitch({
+      //   label: childI18n.get('useTextbusStyleLabel'),
+      //   name: 'useTextbusStyle',
+      //   checked: true
+      // })
     ]
   })
 

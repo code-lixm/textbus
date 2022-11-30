@@ -74,6 +74,8 @@ export function formatPainterToolConfigFactory(injector: Injector): ButtonToolCo
       fromEvent(doc as HTMLElement, 'mouseup').pipe(take(1), delay(10)).subscribe(() => {
         isActive = false
         commander.cleanFormats([linkFormatter])
+        console.log('🚀 ~ file: format-painter.tool.ts ~ line 80 ~ fromEvent ~ formats', formats)
+
         formats.forEach(i => {
           commander.applyFormat(i[0], i[1])
         })

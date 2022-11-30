@@ -28,7 +28,7 @@ export function videoToolConfigFactory(injector: Injector): DialogToolConfig {
         fileUploader: uploader,
         uploadBtnText: childI18n.get('uploadBtnText'),
         validateFn(value: string): string | false {
-          if (!value) {
+          if (!(/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) {
             return childI18n.get('validateErrorMessage')
           }
           return false

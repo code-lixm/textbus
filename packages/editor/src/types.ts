@@ -4,6 +4,7 @@ import { ViewOptions, ComponentLoader } from '@textbus/browser'
 
 import { I18NConfig } from './i18n'
 import { CustomFile, UploadConfig } from './file-uploader'
+import { ModuleAPI } from './module-api'
 
 /**
  * 编辑器配置项
@@ -22,7 +23,7 @@ export interface EditorOptions extends ViewOptions {
   /** 当内容为空时，编辑器内的提示文字 */
   placeholder?: string
   /** 透传的方法 */
-  moduleAPI?: Record<string, any>
+  moduleAPI?: ModuleAPI
   /**
    * 资源上传接口
    * @param config
