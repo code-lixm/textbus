@@ -1,14 +1,24 @@
 import { Injector } from '@tanbo/di'
-import { Commander, ContentType, QueryState, QueryStateType, Selection, Slot } from '@textbus/core'
+import {
+  Commander,
+  ContentType,
+  QueryState,
+  QueryStateType,
+  Selection,
+  Slot
+} from '@textbus/core'
 
 import { ButtonTool, ButtonToolConfig } from '../toolkit/_api'
 import { I18n } from '../../i18n'
-import { todolistComponent, TodoListSlotState } from '../../components/todolist.component'
+import {
+  initState,
+  todolistComponent,
+  TodoListSlotState
+} from '../../components/todolist.component'
 
-
-const nanoid = () => Math.random().toString(36).substr(2)
-
-export function todolistToolConfigFactory(injector: Injector): ButtonToolConfig {
+export function todolistToolConfigFactory(
+  injector: Injector
+): ButtonToolConfig {
   const i18n = injector.get(I18n)
   const commander = injector.get(Commander)
   const selection = injector.get(Selection)
@@ -36,20 +46,13 @@ export function todolistToolConfigFactory(injector: Injector): ButtonToolConfig 
         slots: [
           new Slot<TodoListSlotState>(
             [ContentType.Text, ContentType.InlineComponent],
-            {
-            active: false,
-            disabled: false,
-            endTime: '',
-            userList: [],
-            addUserIsOpen: false,
-            searchText: '',
-            positionId: nanoid()
-          })
+            initState()
+          )
         ]
       })
       commander.insertAfter(todo, selection.commonAncestorComponent!)
       selection.setPosition(todo.slots.get(0)!, 0)
-    },
+    }
   }
 }
 

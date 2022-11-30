@@ -21,19 +21,40 @@ import { EditorOptions } from '../types'
 import { Editor } from '../editor'
 
 export interface TodoListSlotState {
-  active: boolean
+  status: boolean
   disabled: boolean
   endTime?: string
   userList?: userList
   addUserIsOpen: boolean
-  searchText: string,
+  searchText: string
   positionId: string
 }
 
 export interface TodoModalOptions {
-  time: string;
-  userList: userList;
-  setTodoState: (state: TodoListSlotState) => void;
+  time: string
+  userList: userList
+  setTodoState: (state: TodoListSlotState) => void
+}
+
+export const initState: (value?: TodoListSlotState) => TodoListSlotState = (
+  value?: TodoListSlotState
+) => {
+  const state = {
+    status: false,
+    disabled: false,
+    endTime: '',
+    userList: [],
+    addUserIsOpen: false,
+    searchText: '',
+    positionId: nanoid()
+  }
+  if (!value) {
+    return state
+  }
+  return {
+    ...state,
+    ...value
+  }
 }
 
 const nanoid = () => Math.random().toString(36).substr(2)
@@ -53,15 +74,7 @@ export const todolistComponent = defineComponent({
         slots: [
           new Slot<TodoListSlotState>(
             [ContentType.Text, ContentType.InlineComponent],
-            {
-              active: isChecked,
-              disabled: false,
-              endTime: '',
-              userList: [],
-              addUserIsOpen: false,
-              searchText: '',
-              positionId: nanoid()
-            }
+            initState({ status: isChecked } as TodoListSlotState)
           )
         ]
       }
@@ -70,15 +83,9 @@ export const todolistComponent = defineComponent({
   setup(initData: ComponentInitData<void, TodoListSlotState>) {
     const { Text, InlineComponent } = ContentType
     const slots = useSlots<TodoListSlotState>(
-      initData.slots || [new Slot<TodoListSlotState>([Text, InlineComponent], {
-        active: false,
-        disabled: false,
-        endTime: '',
-        userList: [],
-        addUserIsOpen: false,
-        searchText: '',
-        positionId: nanoid()
-      })]
+      initData.slots || [
+        new Slot<TodoListSlotState>([Text, InlineComponent], initState())
+      ]
     )
 
     if (slots.length === 0) {
@@ -88,7 +95,7 @@ export const todolistComponent = defineComponent({
 
     const self = useSelf()
     const selection = injector.get(Selection)
-    const commander = injector.get(Commander)    
+    const commander = injector.get(Commander)
     const editor = injector.get(Editor)
     const readonly = editor.readonly
 
@@ -116,15 +123,7 @@ export const todolistComponent = defineComponent({
       } else {
         const nextSlot = slot.cut(index)
         //重置状态
-        nextSlot.state = {
-          active: false,
-          disabled: false,
-          endTime: '',
-          userList: [],
-          addUserIsOpen: false,
-          searchText: '',
-          positionId: nanoid()
-        }
+        nextSlot.state = initState()
 
         slots.insertAfter(nextSlot, slot)
         selection.setPosition(nextSlot, 0)
@@ -136,19 +135,11 @@ export const todolistComponent = defineComponent({
         return (
           <div component-name="TodoComponent" class="tb-todolist">
             {slots.toArray().map((slot) => {
-              const state = slot.state || {
-                active: false,
-                disabled: false,
-                endTime: '',
-                userList: [],
-                addUserIsOpen: false,
-                searchText: '',
-                positionId: nanoid()
-              }
+              const state = slot.state || initState()
 
               const classes = ['tb-todolist-item']
 
-              if (state.active) {
+              if (state.status) {
                 classes.push('tb-todolist-state-active')
               }
               if (state.disabled) {
@@ -172,10 +163,10 @@ export const todolistComponent = defineComponent({
               let timeClass = state.endTime
                 ? 'background_normal'
                 : 'background_normal background_no_time'
-              if(readonly) timeClass+=' background_readonly'
+              if (readonly) timeClass += ' background_readonly'
               const addUserClass = readonly
-              ? 'add_user add_user_readonly'
-              : 'add_user'
+                ? 'add_user add_user_readonly'
+                : 'add_user'
 
               const searchedList = shareUsers.filter((item) =>
                 item.username.includes(state.searchText)
@@ -198,7 +189,7 @@ export const todolistComponent = defineComponent({
                       class="tb-todolist-state"
                       onClick={() => {
                         slot.updateState((draft) => {
-                          draft.active = !draft.active
+                          draft.status = !draft.status
                         })
                       }}
                     />
@@ -211,7 +202,13 @@ export const todolistComponent = defineComponent({
                       <span class="info_box">
                         <span>
                           {state.userList?.map(({ username, authId }) => (
-                            <span class="mention">
+                            <span
+                              class={
+                                readonly
+                                  ? 'mention mention_readonly'
+                                  : 'mention'
+                              }
+                            >
                               @{username}
                               <span
                                 class="cross"
@@ -282,7 +279,8 @@ export const todolistComponent = defineComponent({
                                         slot.updateState((draft) => {
                                           const userIsExists =
                                             draft.userList?.find(
-                                              ({ authId }) => authId === option.authId
+                                              ({ authId }) =>
+                                                authId === option.authId
                                             )
                                           draft.addUserIsOpen = false
                                           !userIsExists &&
@@ -430,6 +428,13 @@ export const todolistComponentLoader: ComponentLoader = {
 .mention:hover .cross {
   display: inline-block;
 }
+.mention_readonly:hover .cross{
+  display: none;
+}
+.mention_readonly:hover {
+  cursor: default;
+  background-color: rgba(130, 167, 252, 0.18);
+}
 .add_user_readonly {
   display: none;
 }
@@ -454,10 +459,6 @@ export const todolistComponentLoader: ComponentLoader = {
 .add_user:hover {
   background-color: rgba(214, 220, 232, 1);
 }
-.background_readonly: hover{
-  background-color: white;
-  cursor: default;
-}
 .background_normal {
   display: inline-block;
   transform: translateY(-1px);
@@ -480,6 +481,10 @@ export const todolistComponentLoader: ComponentLoader = {
 }
 .background_normal:hover {
   background-color: rgba(214, 220, 232, 1);
+}
+.background_readonly: hover{
+  background-color: white;
+  cursor: default;
 }
 .background_no_time {
   padding-left: 16px;
@@ -507,19 +512,16 @@ export const todolistComponentLoader: ComponentLoader = {
         childSlot: child.querySelector('.tb-todolist-content') as HTMLElement,
         slot: new Slot<TodoListSlotState>(
           [ContentType.Text, ContentType.InlineComponent],
-          {
-            active: !!stateElement?.classList.contains(
+          initState({
+            status: !!stateElement?.classList.contains(
               'tb-todolist-state-active'
             ),
             disabled: !!stateElement?.classList.contains(
               'tb-todolist-state-disabled'
             ),
             endTime,
-            userList: parse(userList),
-            addUserIsOpen: false,
-            searchText: '',
-            positionId: nanoid()
-          }
+            userList: parse(userList)
+          } as TodoListSlotState)
         )
       }
     })

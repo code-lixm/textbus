@@ -46,7 +46,7 @@ export const mentionComponent = defineComponent({
     const commander = injector.get(Commander)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const { shareUsers } = options.moduleAPI?.mention || {
-      shareUsers: [{username:'www',authId:'123'}]
+      shareUsers: []
     }
 
     let state = initData?.state || {
@@ -105,7 +105,7 @@ export const mentionComponent = defineComponent({
 
       if (parentSlot.parent?.name === 'TodolistComponent') {
         const userIsExists = parentSlot.state.userList.find(
-          ({ info }) => info === option.authId
+          ({ authId }) => authId === option.authId
         )
         !userIsExists &&
           parentSlot.updateState((draft) => {
