@@ -33,6 +33,66 @@ async function create() {
     minHeight: '300px',
     theme: 'darkline',
     placeholder: '请输入内容……',
+    moduleAPI: {
+      getShareUsers: () => [{ username: '1', authId: '123' }],
+      getCurrentUserInfo: () => ({name: '1'}),
+      openSetTimeModal(event, options) {},
+      updateTodoList(id, status) {},
+    },
+  //   content: {
+  //     "name": "RootComponent",
+  //     "state": null,
+  //     "slots": [
+  //         {
+  //             "schema": [
+  //                 1,
+  //                 2,
+  //                 3
+  //             ],
+  //             "content": [
+  //                 {
+  //                     "name": "ParagraphComponent",
+  //                     "state": null,
+  //                     "slots": [
+  //                         {
+  //                             "schema": [
+  //                                 1,
+  //                                 2
+  //                             ],
+  //                             "content": [
+  //                                 {
+  //                                     "name": "mentionComponent",
+  //                                     "state": {
+  //                                         "isSelected": true,
+  //                                         "username": "1",
+  //                                         "authId": "123"
+  //                                     },
+  //                                     "slots": [
+  //                                         {
+  //                                             "schema": [
+  //                                                 2
+  //                                             ],
+  //                                             "content": [
+  //                                                 "\n"
+  //                                             ],
+  //                                             "formats": {},
+  //                                             "state": null
+  //                                         }
+  //                                     ]
+  //                                 },
+  //                                 " "
+  //                             ],
+  //                             "formats": {},
+  //                             "state": null
+  //                         }
+  //                     ]
+  //                 }
+  //             ],
+  //             "formats": {},
+  //             "state": null
+  //         }
+  //     ]
+  // }
     // content: document.getElementById('template')?.innerHTML,
     // imports: [
     //   collaborateModule
@@ -156,7 +216,7 @@ create().then(editor => {
 
   editor.onChange.subscribe(() => {
     const root = editor.injector!.get(RootComponentRef)
-    // console.log(root)
+    console.log(editor.getJSON())
     // console.log(root.component.toString())
   })
 })
