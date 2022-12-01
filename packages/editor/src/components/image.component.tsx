@@ -277,10 +277,10 @@ export const imageComponent = defineComponent({
     })
 
     const onload = () => {
-      console.log('🚀 line 283 ~ onload ~ ref.current?.getBoundingClientRect()', ref.current?.getBoundingClientRect())
 
       stateController.update(draft => {
-        Object.assign(draft, ref.current?.getBoundingClientRect())
+        const { height, width } = ref.current?.getBoundingClientRect() || {height: 0, width: 0}
+        Object.assign(draft, { width: width + 'px', height: height + 'px'})
       })
     }
 

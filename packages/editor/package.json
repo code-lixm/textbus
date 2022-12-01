@@ -1,6 +1,6 @@
 {
-  "name": "@textbus/editor",
-  "version": "2.5.10",
+  "name": "@xunji/textbus-editor",
+  "version": "2.5.20",
   "description": "Textbus is a rich text editor and framework that is highly customizable and extensible to achieve rich wysiwyg effects.",
   "main": "./bundles/public-api.js",
   "module": "./bundles/public-api.js",
@@ -39,7 +39,6 @@
   },
   "author": {
     "name": "xunji"
-
   },
   "repository": {
     "type": "git",

@@ -4,12 +4,15 @@ import {
   ComponentInstance,
   ContentType,
   defineComponent,
+  fromEvent,
   onBreak,
+  onDestroy,
   Selection,
   Slot,
   useContext,
   useSelf,
   useSlots,
+  useState,
   VElement
 } from '@textbus/core'
 import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
@@ -99,6 +102,30 @@ export const todolistComponent = defineComponent({
     const editor = injector.get(Editor)
     const readonly = editor.readonly
 
+    let currentState = {
+      currentOpenPanelIndex: ''
+    }
+    const stateController = useState(currentState)
+
+    const subscribe = stateController.onChange.subscribe((newState) => {
+      currentState = newState
+    })
+
+    onDestroy(() => {
+      subscribe.unsubscribe()
+    })
+
+    fromEvent(document, 'click').subscribe((ev: Event) => {
+      const addUserEl = document.querySelectorAll('.add_user')
+      const addUserFlag = Array.from(addUserEl).some(el => el.contains(ev.target as HTMLElement))
+      if(!addUserFlag) {
+        stateController.update((draft) => {
+          draft.currentOpenPanelIndex = ''
+        })
+        self.changeMarker.forceMarkDirtied()
+      }
+    })
+
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const { openSetTimeModal, updateTodoList } = options.moduleAPI || {}
     const shareUsers = options.moduleAPI?.getShareUsers() || []
@@ -132,7 +159,7 @@ export const todolistComponent = defineComponent({
       render(_, slotRender): VElement {
         return (
           <div component-name="TodoComponent" class="tb-todolist">
-            {slots.toArray().map((slot) => {
+            {slots.toArray().map((slot, index) => {
               const state = slot.state || initState()
 
               const classes = ['tb-todolist-item']
@@ -228,12 +255,16 @@ export const todolistComponent = defineComponent({
                         <span
                           class={addUserClass}
                           onClick={() => {
+                            stateController.update((draft) => {
+                              draft.currentOpenPanelIndex = 'addUser' + index
+                            })
+                            // eslint-disable-next-line max-len
                             slot.updateState((draft) => {
                               draft.addUserIsOpen = true
                             })
                           }}
                         >
-                          {state.addUserIsOpen ? (
+                          {currentState.currentOpenPanelIndex === 'addUser' + index ? (
                             <div
                               onClick={(e: MouseEvent) => e.stopPropagation()}
                               style={{
@@ -245,7 +276,8 @@ export const todolistComponent = defineComponent({
                                 padding: '8px',
                                 top: '26px',
                                 boxShadow: '0px 0px 5px rgba(0,0,0, 0.1)',
-                                color: '#000'
+                                color: '#000',
+                                zIndex: 1
                               }}
                             >
                               <input
@@ -380,6 +412,7 @@ export const todolistComponentLoader: ComponentLoader = {
 }
 .tb-todolist-content {
   flex: 1;
+  display: inline-block;
 }
 
 .info_box {

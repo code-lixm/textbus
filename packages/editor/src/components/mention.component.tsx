@@ -169,6 +169,7 @@ export const mentionComponent = defineComponent({
                 <div
                   class="mention-menu"
                   style={{
+                    zIndex: '1',
                     position: 'absolute',
                     left: '0px',
                     background: '#ffffff',

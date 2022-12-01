@@ -37,7 +37,7 @@ async function create() {
       getShareUsers: () => [{ username: '1', authId: '123' }],
       getCurrentUserInfo: () => ({name: '1'}),
       openSetTimeModal(event, options) {},
-      updateTodoList(id, status) {},
+      updateTodoList(){}
     },
   //   content: {
   //     "name": "RootComponent",
