@@ -210,10 +210,11 @@ export const imageComponent = defineComponent({
                 uploadBtnText: childI18n.get('uploadBtnText'),
                 fileUploader,
                 validateFn(value: string) {
-                  if (!(/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) {
-                    return childI18n.get('validateErrorMessage')
-                  }
-                  return false
+                  // eslint-disable-next-line max-len
+                  if((/^\s*data:(?:[a-z]+\/[a-z0-9-+.]+(?:;[a-z-]+=[a-z0-9-]+)?)?(?:;base64)?,([a-z0-9!$&',()*+;=\-._~:@/?%\s]*?)\s*$/i.test(value))) return false
+                  // eslint-disable-next-line max-len
+                  if ((/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) return false
+                  return childI18n.get('validateErrorMessage')
                 }
               }),
               new SizeSetter('size', childI18n.getContext('sizeSetter')),
@@ -279,8 +280,8 @@ export const imageComponent = defineComponent({
     const onload = () => {
 
       stateController.update(draft => {
-        const { height, width } = ref.current?.getBoundingClientRect() || {height: 0, width: 0}
-        Object.assign(draft, { width: width + 'px', height: height + 'px'})
+        const { height, width } = ref.current?.getBoundingClientRect() || { height: 0, width: 0 }
+        Object.assign(draft, { width: width + 'px', height: height + 'px' })
       })
     }
 

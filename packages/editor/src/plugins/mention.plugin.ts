@@ -17,6 +17,7 @@ export class MentionPlugin implements Plugin {
     const commander = injector.get(Commander)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const shareUsers = options.moduleAPI?.getShareUsers().slice() || []
+    const currentUser = options.moduleAPI?.getCurrentUserInfo() || {name: ''}
     const isValid = !!shareUsers.length
 
     keyboard.addShortcut({
@@ -25,7 +26,7 @@ export class MentionPlugin implements Plugin {
         shiftKey: true,
       },
       action() {
-        const { commonAncestorSlot, commonAncestorComponent } = selection
+        const { commonAncestorSlot } = selection
         const content = commonAncestorSlot?.toString() || ' '
         const firstString =
           commonAncestorSlot?.getContentAtIndex(selection.startOffset! - 1) ||
@@ -33,8 +34,7 @@ export class MentionPlugin implements Plugin {
 
         // 初始条件
         if (
-          commonAncestorSlot!.schema.includes(ContentType.InlineComponent) &&
-          commonAncestorComponent?.name !== 'HeadingComponent'
+          commonAncestorSlot!.schema.includes(ContentType.Text)
         ) {
           // 首行直接@ 与 非首行空格后 @，否则当做普通文本
           if (
@@ -46,6 +46,7 @@ export class MentionPlugin implements Plugin {
               isSelected: false,
               username: '',
               authId: '',
+              currentUser: currentUser.name,
             }
             const component = mentionComponent.createInstance(injector, {
               state: initialMentionState,

@@ -1,47 +1,34 @@
-import { Injectable } from '@tanbo/di'
-import { createElement, createTextNode } from '@textbus/browser'
+import { Injectable, Injector } from '@tanbo/di'
+import { EDITOR_OPTIONS } from '@textbus/browser'
 
-import { Layout } from './layout'
+import { EditorOptions } from './types'
 
 @Injectable()
 export class Message {
-  private messageBox: HTMLElement
+  private notification: any
 
-  constructor(private layout: Layout) {
-    this.messageBox = createElement('div', {
-      classes: ['textbus-message']
-    })
-    this.layout.workbench.append(this.messageBox)
+  constructor(private injector: Injector) {
+    const options = this.injector.get(EDITOR_OPTIONS) as EditorOptions
+    this.notification = options.moduleAPI?.notification
   }
 
-  message(message: string, time?: number) {
-    this.createMessage('message', message, time)
+  message(message: string) {
+    this.notification('', message)
   }
 
-  info(message: string, time?: number) {
-    this.createMessage('info', message, time)
+  info(message: string) {
+    this.notification('info', message)
   }
 
-  success(message: string, time?: number) {
-    this.createMessage('success', message, time)
+  success(message: string) {
+    this.notification('success', message)
   }
 
-  warning(message: string, time?: number) {
-    this.createMessage('warning', message, time)
+  warning(message: string) {
+    this.notification('warning', message)
   }
 
-  danger(message: string, time?: number) {
-    this.createMessage('danger', message, time)
-  }
-
-  private createMessage(type: string, message: string, time = 3000) {
-    const tip = createElement('div', {
-      classes: ['textbus-message-item', 'textbus-message-item-' + type],
-      children: [createTextNode(message)]
-    })
-    this.messageBox.append(tip)
-    setTimeout(() => {
-      tip.remove()
-    }, time)
+  danger(message: string) {
+    this.notification('error', message)
   }
 }

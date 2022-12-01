@@ -34,6 +34,8 @@ export interface ModuleAPI {
   openSetTimeModal(event: MouseEvent, options: TodoModalOptions): void;
   // 保存待办信息
   updateTodoList: (id: string, status: boolean) => void;
+  // 发送消息
+  notification:(type: '' | 'info' | 'success' | 'warning' | 'error' | undefined, message: string) => void
 }
 
 export const DEFAULT_MODULE_API: ModuleAPI = {
@@ -41,4 +43,5 @@ export const DEFAULT_MODULE_API: ModuleAPI = {
   getShareUsers: () => [],
   openSetTimeModal: () => ({}),
   updateTodoList: () => ({}),
+  notification: () => ({})
 }

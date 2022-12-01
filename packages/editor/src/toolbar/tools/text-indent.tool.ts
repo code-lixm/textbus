@@ -19,20 +19,20 @@ export function textIndentToolConfigFactory(injector: Injector): SelectToolConfi
     iconClasses: ['textbus-icon-text-indent'],
     mini: true,
     options: [{
-      label: '0x',
+      label: '0X',
       value: '0',
       classes: ['textbus-toolbar-text-indent-0'],
       default: true
     }, {
-      label: '1x',
+      label: '1X',
       value: '1em',
       classes: ['textbus-toolbar-text-indent-1'],
     }, {
-      label: '2x',
+      label: '2X',
       classes: ['textbus-toolbar-text-indent-2'],
       value: '2em',
     }, {
-      label: '4x',
+      label: '4X',
       classes: ['textbus-toolbar-text-indent-4'],
       value: '4em'
     }],

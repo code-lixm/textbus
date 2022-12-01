@@ -15,7 +15,7 @@ import {
   videoComponentLoader,
   imageCardComponentLoader,
   todolistComponentLoader,
-  katexComponentLoader,
+  // katexComponentLoader,
   wordExplainComponentLoader,
   timelineComponentLoader,
   stepComponentLoader,
@@ -28,7 +28,7 @@ import {
   imageCardComponent,
   blockComponent,
   stepComponent,
-  katexComponent,
+  // katexComponent,
   imageComponent,
   preComponent,
   audioComponent,
@@ -101,7 +101,7 @@ import { LinkJumpTipPlugin, MentionPlugin } from './plugins/_api'
 export const defaultComponentLoaders: ComponentLoader[] = [
   imageCardComponentLoader,
   todolistComponentLoader,
-  katexComponentLoader,
+  // katexComponentLoader,
   wordExplainComponentLoader,
   timelineComponentLoader,
   stepComponentLoader,
@@ -157,7 +157,7 @@ export const defaultComponents: Component[] = [
   videoComponent,
   imageCardComponent,
   todolistComponent,
-  katexComponent,
+  // katexComponent,
   wordExplainComponent,
   timelineComponent,
   stepComponent,
@@ -218,7 +218,7 @@ export const defaultTools: ToolFactory[][] = [
   [textAlignTool],
   [tableAddTool, tableRemoveTool],
   [formatPainterTool],
-  [cleanTool]
+  [cleanTool, fontSizeTool]
 ]
 
 export function createEditor(options: EditorOptions = {}) {

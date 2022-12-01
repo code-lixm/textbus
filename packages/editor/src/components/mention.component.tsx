@@ -7,6 +7,7 @@ import {
   onBlur,
   onContentDelete,
   onDestroy,
+  onViewChecked,
   onViewInit,
   Selection,
   Slot,
@@ -30,11 +31,12 @@ export interface MentionComponentState {
   isSelected: boolean
   username: string
   authId: string
+  currentUser: string
 }
 
 export const mentionComponent = defineComponent({
   type: ContentType.InlineComponent,
-  name: 'mentionComponent',
+  name: 'MentionComponent',
   setup(initData?: ComponentInitData<MentionComponentState>) {
     const self = useSelf()
     const slots = useSlots(
@@ -49,17 +51,19 @@ export const mentionComponent = defineComponent({
     let state = initData?.state || {
       isSelected: false,
       authId: '',
-      username: ''
+      username: '',
+      currentUser: '',
     }
+    let isSelf = false
     let users = options.moduleAPI?.getShareUsers().slice() || []
     const currentUserInfo = options.moduleAPI?.getCurrentUserInfo() || {name: ''}
 
-    const mentionMenu = useRef<HTMLElement>()
     const searchInput = useRef<HTMLElement>()
 
     const stateController = useState(state)
     const subscribe = stateController.onChange.subscribe((newState) => {
       state = newState
+      self.changeMarker.forceMarkDirtied()
     })
 
     let searchText = ''
@@ -70,18 +74,25 @@ export const mentionComponent = defineComponent({
 
     // 组件初始化完成
     onViewInit(() => {
-      if(state.isSelected) {
-        mentionMenu.current!.style.display = 'none'
-      }
+      isSelf = state.currentUser === currentUserInfo.name && !state.isSelected
+      self.changeMarker.forceMarkDirtied()
       // 存在
       if (users.length) {
         searchInput.current?.focus()
-        self.changeMarker.forceMarkDirtied()
       } else {
         // 不存在
         commander.removeComponent(self)
         commander.insert('@')
       }
+    })
+
+    onViewChecked(() => {
+      isSelf = false
+    })
+
+    onBlur(() => {
+      isSelf = false
+      self.changeMarker.forceMarkDirtied()
     })
 
     // 初次删除为默认删除动作与搜索匹配 再次删除为删除组件动作
@@ -92,9 +103,6 @@ export const mentionComponent = defineComponent({
       }
     })
 
-    onBlur(() => {
-      mentionMenu.current!.style.display = 'none'
-    })
 
     // 选择事件
     const onSelect = (option) => {
@@ -122,7 +130,8 @@ export const mentionComponent = defineComponent({
       selection.setPosition(parentSlot, index + 1)
       commander.insert(' ')
 
-      mentionMenu.current!.style.display = 'none'
+      isSelf = false
+      self.changeMarker.forceMarkDirtied()
     }
 
     const onSearch = (ev) => {
@@ -165,7 +174,7 @@ export const mentionComponent = defineComponent({
           >
             <span>
               @{state.username}
-              <span style={{ position: 'relative' }} ref={mentionMenu}>
+              {isSelf && users.length ? <span style={{ position: 'relative' }}>
                 <div
                   class="mention-menu"
                   style={{
@@ -215,7 +224,7 @@ export const mentionComponent = defineComponent({
                     })}
                   </div>
                 </div>
-              </span>
+              </span> : null}
             </span>
             {slotRender(slots.get(0)!, () => {
               return <span />
@@ -272,7 +281,8 @@ export const mentionComponentLoader: ComponentLoader = {
       state: {
         isSelected: element.dataset.authId || '' ? true : false,
         authId: element.dataset.authId || '',
-        username: element.dataset.username || ''
+        username: element.dataset.username || '',
+        currentUser: '',
       },
       slots: [
         slotParser(

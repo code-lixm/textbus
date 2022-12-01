@@ -189,7 +189,7 @@ export const todolistComponent = defineComponent({
               const addUserClass = readonly
                 ? 'add_user add_user_readonly'
                 : 'add_user'
-              
+
               const searchedList = shareUsers.filter((item) =>
                 item.username.includes(state.searchText)
               )
