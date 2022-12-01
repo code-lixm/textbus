@@ -50,7 +50,7 @@ export function todolistToolConfigFactory(
           )
         ]
       })
-      commander.insertAfter(todo, selection.commonAncestorComponent!)
+      commander.insert
       selection.setPosition(todo.slots.get(0)!, 0)
     }
   }

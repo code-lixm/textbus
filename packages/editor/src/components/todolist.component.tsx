@@ -4,7 +4,6 @@ import {
   ComponentInstance,
   ContentType,
   defineComponent,
-  fromEvent,
   onBreak,
   onDestroy,
   Selection,
@@ -12,11 +11,11 @@ import {
   useContext,
   useSelf,
   useSlots,
-  useState,
   VElement
 } from '@textbus/core'
 import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
 import { Injector } from '@tanbo/di'
+import dayjs from 'dayjs'
 import { paragraphComponent } from './paragraph.component'
 import { parse, stringify, userList } from './custom-parse'
 
@@ -62,6 +61,11 @@ export const initState: (value?: TodoListSlotState) => TodoListSlotState = (
 
 const nanoid = () => Math.random().toString(36).substr(2)
 
+const clearStateArr: Array<() => void> = []
+const clearState = () => {
+  clearStateArr.forEach((fun) => fun())
+}
+
 export const todolistComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'TodolistComponent',
@@ -91,6 +95,20 @@ export const todolistComponent = defineComponent({
       ]
     )
 
+    const index = clearStateArr.push(() => {
+      slots.toArray().forEach((slot) => {
+        const state = slot.state || initState()
+        if (state.addUserIsOpen) {
+          slot.updateState((draft) => {
+            draft.addUserIsOpen = false
+          })
+        }
+      })
+    })
+    onDestroy(() => {
+      clearStateArr.splice(index - 1, 1)
+    })
+
     if (slots.length === 0) {
       slots.push(new Slot<TodoListSlotState>([Text, InlineComponent]))
     }
@@ -101,30 +119,6 @@ export const todolistComponent = defineComponent({
     const commander = injector.get(Commander)
     const editor = injector.get(Editor)
     const readonly = editor.readonly
-
-    let currentState = {
-      currentOpenPanelIndex: ''
-    }
-    const stateController = useState(currentState)
-
-    const subscribe = stateController.onChange.subscribe((newState) => {
-      currentState = newState
-    })
-
-    onDestroy(() => {
-      subscribe.unsubscribe()
-    })
-
-    fromEvent(document, 'click').subscribe((ev: Event) => {
-      const addUserEl = document.querySelectorAll('.add_user')
-      const addUserFlag = Array.from(addUserEl).some(el => el.contains(ev.target as HTMLElement))
-      if(!addUserFlag) {
-        stateController.update((draft) => {
-          draft.currentOpenPanelIndex = ''
-        })
-        self.changeMarker.forceMarkDirtied()
-      }
-    })
 
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const { openSetTimeModal, updateTodoList } = options.moduleAPI || {}
@@ -159,7 +153,7 @@ export const todolistComponent = defineComponent({
       render(_, slotRender): VElement {
         return (
           <div component-name="TodoComponent" class="tb-todolist">
-            {slots.toArray().map((slot, index) => {
+            {slots.toArray().map((slot) => {
               const state = slot.state || initState()
 
               const classes = ['tb-todolist-item']
@@ -189,10 +183,13 @@ export const todolistComponent = defineComponent({
                 ? 'background_normal'
                 : 'background_normal background_no_time'
               if (readonly) timeClass += ' background_readonly'
+              if(state.endTime && dayjs(state.endTime).valueOf()<dayjs().valueOf()){
+                timeClass += ' background_overdue'
+              }
               const addUserClass = readonly
                 ? 'add_user add_user_readonly'
                 : 'add_user'
-
+              
               const searchedList = shareUsers.filter((item) =>
                 item.username.includes(state.searchText)
               )
@@ -213,13 +210,12 @@ export const todolistComponent = defineComponent({
                     <div
                       class="tb-todolist-state"
                       onClick={() => {
-                        if(readonly && updateTodoList) {
+                        if (readonly && updateTodoList) {
                           updateTodoList(state.positionId, state.status)
                         }
                         slot.updateState((draft) => {
                           draft.status = !draft.status
                         })
-
                       }}
                     />
                   </div>
@@ -254,17 +250,18 @@ export const todolistComponent = defineComponent({
                         </span>
                         <span
                           class={addUserClass}
-                          onClick={() => {
-                            stateController.update((draft) => {
-                              draft.currentOpenPanelIndex = 'addUser' + index
+                          onClick={(e: MouseEvent) => {
+                            e.stopPropagation()
+                            document.addEventListener('click', clearState, {
+                              once: true
                             })
-                            // eslint-disable-next-line max-len
+                            clearState()
                             slot.updateState((draft) => {
                               draft.addUserIsOpen = true
                             })
                           }}
                         >
-                          {currentState.currentOpenPanelIndex === 'addUser' + index ? (
+                          {state.addUserIsOpen ? (
                             <div
                               onClick={(e: MouseEvent) => e.stopPropagation()}
                               style={{
@@ -523,6 +520,9 @@ export const todolistComponentLoader: ComponentLoader = {
 }
 .background_no_time {
   padding-left: 16px;
+}
+.background_overdue {
+  color: rgb(247, 94, 94);
 }
 `
     ]
