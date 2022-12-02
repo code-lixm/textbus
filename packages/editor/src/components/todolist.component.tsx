@@ -338,7 +338,7 @@ export const todolistComponent = defineComponent({
                             }
                           }}
                         >
-                          {state.endTime + ' '}
+                          {state.endTime || ' '}
                         </span>
                       </span>
                     ) : null}
