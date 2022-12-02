@@ -203,7 +203,6 @@ importers:
       '@textbus/browser': ^2.5.10
       '@textbus/collaborate': ^2.5.10
       '@textbus/core': ^2.5.10
-      katex: ^0.16.0
       prismjs: ^1.23.0
       rimraf: ^3.0.2
     dependencies:
@@ -216,7 +215,6 @@ importers:
       '@textbus/browser': link:../browser
       '@textbus/collaborate': link:../collaborate
       '@textbus/core': link:../core
-      katex: 0.16.3
       prismjs: 1.29.0
     devDependencies:
       rimraf: 3.0.2

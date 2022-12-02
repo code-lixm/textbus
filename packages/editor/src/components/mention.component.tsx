@@ -54,9 +54,10 @@ export const mentionComponent = defineComponent({
       username: '',
       currentUser: '',
     }
+
     let isSelf = false
     let users = options.moduleAPI?.getShareUsers().slice() || []
-    const currentUserInfo = options.moduleAPI?.getCurrentUserInfo() || {name: ''}
+    const currentUserInfo = options.moduleAPI?.getCurrentUserInfo() || { name: '' }
 
     const searchInput = useRef<HTMLElement>()
 
@@ -79,11 +80,13 @@ export const mentionComponent = defineComponent({
       // 存在
       if (users.length) {
         searchInput.current?.focus()
+        self.changeMarker.forceMarkDirtied()
       } else {
         // 不存在
         commander.removeComponent(self)
         commander.insert('@')
       }
+
     })
 
     onViewChecked(() => {
@@ -143,6 +146,7 @@ export const mentionComponent = defineComponent({
         (item) => !item.username.includes(searchText)
       )
       users = [...searchedList, ...unSearchedList]
+      isSelf = true
       self.changeMarker.forceMarkDirtied()
     }
 
@@ -161,7 +165,7 @@ export const mentionComponent = defineComponent({
     return {
       render(_, slotRender: SlotRender): VElement {
         let classes = ''
-        if(state.isSelected) {
+        if (state.isSelected) {
           classes = state.username === currentUserInfo.name ? 'mention-selected-self' : 'mention-selected'
         }
         return (
@@ -204,7 +208,11 @@ export const mentionComponent = defineComponent({
                       borderBottom: '1px solid #e8e8e8'
                     }}
                   />
-                  <div>
+                  <div style={{
+                    maxHeight: '150px',
+                    overflow: 'scroll',
+                    overflowX: 'hidden'
+                  }}>
                     {users.map((option) => {
                       return (
                         <div

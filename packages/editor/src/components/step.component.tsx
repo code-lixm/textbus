@@ -2,6 +2,7 @@ import {
   ComponentInitData,
   ComponentInstance,
   ContentType,
+  Controller,
   defineComponent,
   onDestroy,
   Slot,
@@ -48,6 +49,8 @@ export const stepComponent = defineComponent({
       step: 0
     }
     const injector = useContext()
+    const controller = injector.get(Controller)
+    const readonly = controller.readonly
     const slots = useSlots(initData?.slots || [])
     if (slots.length === 0) {
       slots.push(
@@ -65,8 +68,12 @@ export const stepComponent = defineComponent({
     return {
       render(isOutputMode: boolean, slotRender): VElement {
         const currentStep = state.step
+        const classes = ['tb-step']
+        if(!readonly) {
+          classes.push('tb-step-border')
+        }
         return (
-          <div component-name='StepComponent' class='tb-step' step={state.step}>
+          <div component-name='StepComponent' class={classes.join(' ')} step={state.step}>
             {
               slots.toArray().map((slot, index) => {
                 let state = 'tb-waiting'
@@ -122,6 +129,20 @@ export const stepComponentLoader: ComponentLoader = {
       `
 .tb-step {
   display: flex;
+  padding: 16px 5px;
+}
+.tb-step-border {
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  position: relative;
+}
+.tb-step-border::after {
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  color: #cccccc;
+  position: absolute;
+  content: '线框仅编辑时可见';
 }
 .tb-step-item {
   position: relative;

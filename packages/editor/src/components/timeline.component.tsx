@@ -2,6 +2,7 @@ import {
   ComponentInitData,
   ComponentInstance,
   ContentType,
+  Controller,
   defineComponent,
   Slot,
   SlotRender,
@@ -57,6 +58,8 @@ export const timelineComponent = defineComponent({
   name: 'TimelineComponent',
   setup(initData?: ComponentInitData<void, TimelineSlotState>) {
     const injector = useContext()
+    const controller = injector.get(Controller)
+    const readonly = controller.readonly
     const slots = useSlots<TimelineSlotState>(initData?.slots || [
       createTimelineItem(injector)
     ])
@@ -64,10 +67,14 @@ export const timelineComponent = defineComponent({
     if (slots.length === 0) {
       slots.push(createTimelineItem(injector))
     }
+    const classes = ['tb-timeline']
+    if(!readonly) {
+      classes.push('tb-timeline-border')
+    }
     return {
       render(isOutput: boolean, slotRender: SlotRender): VElement {
         return (
-          <div component-name='TimelineComponent' class='tb-timeline'>
+          <div component-name='TimelineComponent' class={classes.join(' ')}>
             {
               slots.toArray().map(slot => {
                 const type = slot.state!.type
@@ -126,6 +133,19 @@ export const timelineComponentLoader: ComponentLoader = {
   display: block;
   padding-top: 1em;
   padding-left: 5px;
+}
+.tb-timeline-border {
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  position: relative;
+}
+.tb-timeline-border::after {
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  color: #cccccc;
+  position: absolute;
+  content: '线框仅编辑时可见';
 }
 .tb-timeline-item {
   display: block;
