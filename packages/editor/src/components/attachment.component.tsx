@@ -127,6 +127,13 @@ export const attachmentComponentLoader: ComponentLoader = {
   padding: 0 10px;
   cursor: pointer;
 }
+.tb-attachment img {
+  max-width: 15px;
+  height: 100%;
+  margin-right: 5px;
+  position: relative;
+  top: 1px;
+}
 .tb-attachment:hover {
   background: #f1f1f1;
 }

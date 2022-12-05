@@ -1,4 +1,5 @@
 import {
+  Commander,
   ComponentInitData,
   ComponentInstance,
   ContentType,
@@ -7,6 +8,7 @@ import {
   Slot,
   SlotRender,
   useContext,
+  useSelf,
   useSlots,
   VElement
 } from '@textbus/core'
@@ -57,7 +59,9 @@ export const timelineComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'TimelineComponent',
   setup(initData?: ComponentInitData<void, TimelineSlotState>) {
+    const self = useSelf()
     const injector = useContext()
+    const commander = injector.get(Commander)
     const controller = injector.get(Controller)
     const readonly = controller.readonly
     const slots = useSlots<TimelineSlotState>(initData?.slots || [
@@ -100,6 +104,10 @@ export const timelineComponent = defineComponent({
                       !isOutput &&
                       <span>
                         <span class="tb-timeline-plus" onClick={() => {
+                          if(slots.length === 1) {
+                            commander.removeComponent(self)
+                            return
+                          }
                           slots.remove(slot)
                         }} />
                         <span class="tb-timeline-add" onClick={() => {
