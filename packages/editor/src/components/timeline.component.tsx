@@ -43,7 +43,7 @@ export function createTimelineItem(injector: Injector, type: TimelineType = 'pri
     [fontSizeFormatter, '18px'],
     [boldFormatter, true]
   ])
-  title.slots.first!.insert(` ${new Date().toLocaleDateString().replaceAll('/', '-')}`, [
+  title.slots.first!.insert(` ${new Date().toLocaleDateString()}`, [
     [fontSizeFormatter, '15px'],
     [colorFormatter, '#777']
   ])
