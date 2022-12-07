@@ -6,10 +6,15 @@ import {
   QueryState,
   QueryStateType,
   Selection,
-  Slot,
+  Slot
 } from '@textbus/core'
 
-import { listComponent, ListComponentExtends, paragraphComponent } from '../../../components/_api'
+import {
+  listComponent,
+  ListComponentExtends,
+  paragraphComponent,
+  ListSlotState
+} from '../../../components/_api'
 
 export function listToolCreator(injector: Injector, type: 'ul' | 'ol') {
   const selection = injector.get(Selection)
@@ -17,7 +22,10 @@ export function listToolCreator(injector: Injector, type: 'ul' | 'ol') {
   const instance = {
     queryState(): QueryState<ComponentInstance<ListComponentExtends>> {
       const component = selection.commonAncestorComponent
-      if (component?.name === listComponent.name && (component.extends as ListComponentExtends).type === type) {
+      if (
+        component?.name === listComponent.name &&
+        (component.extends as ListComponentExtends).type === type
+      ) {
         return {
           state: QueryStateType.Enabled,
           value: component as ComponentInstance<ListComponentExtends>
@@ -42,10 +50,7 @@ export function listToolCreator(injector: Injector, type: 'ul' | 'ol') {
         target: paragraphComponent,
         multipleSlot: false,
         slotFactory(): Slot {
-          return new Slot([
-            ContentType.Text,
-            ContentType.InlineComponent
-          ])
+          return new Slot([ContentType.Text, ContentType.InlineComponent])
         }
       })
     },
@@ -54,13 +59,20 @@ export function listToolCreator(injector: Injector, type: 'ul' | 'ol') {
         target: listComponent,
         multipleSlot: true,
         slotFactory(): Slot {
-          return new Slot([
-            ContentType.Text,
-            ContentType.InlineComponent
-          ])
+          return new Slot<ListSlotState>(
+            [
+              ContentType.Text,
+              ContentType.InlineComponent,
+              ContentType.BlockComponent
+            ],
+            {
+              // 是否有子元素（缩进）
+              haveChild: false
+            }
+          )
         },
         stateFactory() {
-          return type
+          return { type, level: 1 }
         }
       })
     }

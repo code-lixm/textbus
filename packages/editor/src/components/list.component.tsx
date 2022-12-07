@@ -11,11 +11,15 @@ import {
   useContext,
   useSlots,
   VElement,
-  ComponentInitData, useState, onDestroy,
+  ComponentInitData,
+  useState,
+  onDestroy,
+  useDynamicShortcut
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { paragraphComponent } from '@textbus/editor'
 
-import { paragraphComponent } from './paragraph.component'
+const olTypeJudeg: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
 
 export interface SegmentedSlots<T extends Slot = Slot> {
   before: T[]
@@ -23,8 +27,17 @@ export interface SegmentedSlots<T extends Slot = Slot> {
   after: T[]
 }
 
+export interface ListSlotState {
+  haveChild: boolean
+}
+
+export interface ListComponentData {
+  type: 'ul' | 'ol'
+  level: number
+}
+
 export interface ListComponentExtends extends ComponentExtends {
-  type: 'ul' | 'ol',
+  type: 'ul' | 'ol'
 
   split?(startIndex: number, endIndex: number): SegmentedSlots
 }
@@ -38,17 +51,23 @@ export const listComponent = defineComponent({
     match: /^(1\.|[-+*])$/,
     generateInitData(content: string) {
       return {
-        state: /[-+*]/.test(content) ? 'ul' : 'ol'
+        state: {
+          type: /[-+*]/.test(content) ? 'ul' : 'ol',
+          level: 0
+        }
       }
     }
   },
-  setup(data?: ComponentInitData<'ul' | 'ol'>): ListComponentExtends {
+  setup(
+    data?: ComponentInitData<ListComponentData, ListSlotState>
+  ): ListComponentExtends {
     const injector = useContext()
     const selection = injector.get(Selection)
 
-    let state = data?.state || 'ul'
+    let state = data?.state || { type: 'ul', level: 1 }
+
     const stateController = useState(state)
-    const sub = stateController.onChange.subscribe(v => {
+    const sub = stateController.onChange.subscribe((v) => {
       state = v
     })
 
@@ -56,45 +75,212 @@ export const listComponent = defineComponent({
       sub.unsubscribe()
     })
 
-    const slots = useSlots(data?.slots || [new Slot([
-      ContentType.Text,
-      ContentType.InlineComponent,
-    ])])
+    const slots = useSlots<ListSlotState>(
+      data?.slots || [
+        new Slot<ListSlotState>(
+          [
+            ContentType.Text,
+            ContentType.InlineComponent,
+            ContentType.BlockComponent
+          ],
+          {
+            haveChild: false
+          }
+        )
+      ]
+    )
+    // 降级
+    useDynamicShortcut({
+      keymap: {
+        key: 'Tab',
+        shiftKey: true
+      },
+      action() {
+        // 获取当前插槽
+        const slot = selection.commonAncestorSlot as Slot<ListSlotState>
+        const slotIndex = slot.index
+        const parentSlot = slot?.parentSlot
+        // 当前插槽的父组件的父插槽有子元素
+        if (parentSlot?.state?.haveChild) {
+          //获取当前插槽在插槽集中的索引
+          // const slots = slot?.parent?.slots!
+          const index = slots?.indexOf(slot) || 0
+          const afterSlot = slots.get(index + 1)
 
-    onBreak(ev => {
-      if (ev.target.isEmpty && ev.target === slots.last) {
-        const paragraph = paragraphComponent.createInstance(injector)
-        const parentComponent = selection.commonAncestorComponent!
-        const parentSlot = parentComponent.parent!
-        const index = parentSlot.indexOf(parentComponent)
-        parentSlot.retain(index + 1)
-        if (slots.length > 1) {
-          slots.remove(slots.last)
+          const deleteSlots: Array<Slot<ListSlotState>> = []
+          const popSlot = () => {
+            const deleteSlot = slots.pop()
+            deleteSlot && deleteSlots.unshift(deleteSlot)
+            if (deleteSlot !== slot) popSlot()
+          }
+          popSlot()
+          // 去掉当前插槽
+          deleteSlots.shift()
+          // 当前插槽有子元素
+          if (afterSlot?.state?.haveChild) {
+            deleteSlots.shift()
+            afterSlot.sliceContent().forEach((item: any) => {
+              if (item.name === 'ListComponent') {
+                item.slots.push(...deleteSlots)
+              }
+            })
+            parentSlot.parent?.slots.insertAfter([slot, afterSlot], parentSlot)
+          } else {
+            const insertSlots = [slot]
+            if (deleteSlots.length) {
+              // 创建新插槽
+              const newSlot = new Slot<ListSlotState>(
+                [
+                  ContentType.Text,
+                  ContentType.InlineComponent,
+                  ContentType.BlockComponent
+                ],
+                { haveChild: true }
+              )
+              // 创建新的 listComponent
+              const component = listComponent.createInstance(injector, {
+                state: { type: state.type, level: state.level },
+                slots: deleteSlots
+              })
+              // 将新组件插入当前插槽
+              newSlot.insert(component)
+              insertSlots.push(newSlot)
+            }
+            parentSlot.parent?.slots.insertAfter(insertSlots, parentSlot)
+          }
+          if (!slots.length) {
+            parentSlot.parent?.slots.remove(parentSlot)
+          }
+          selection.setPosition(slot, slotIndex)
+          console.log('降级', index)
         }
-        parentSlot.insert(paragraph)
-        selection.setPosition(paragraph.slots.get(0)!, 0)
+      }
+    })
+    // 升级
+    useDynamicShortcut({
+      keymap: {
+        key: 'Tab'
+      },
+      action() {
+        // 获取当前插槽和下标位置
+        const slot = selection.commonAncestorSlot!
+        const slotIndex = slots.indexOf(slot)
+        const index = slot?.index || 0
+        const beforSlot = slots.get(slotIndex - 1)
+        const afterSlot = slots.get(slotIndex + 1)
+        // 不允许缩进第一个子元素
+        if (slotIndex === 0) return
+
+        // 如果当前插槽的前一个插槽有子元素，则将此插槽进行合并
+        if (beforSlot?.state?.haveChild) {
+          beforSlot.sliceContent().forEach((item: any) => {
+            if (item.name === 'ListComponent') {
+              item.slots.push(slot)
+              afterSlot?.state?.haveChild && item.slots.push(afterSlot)
+            }
+          })
+        } else {
+          // 创建新插槽
+          const newSlot = new Slot<ListSlotState>(
+            [
+              ContentType.Text,
+              ContentType.InlineComponent,
+              ContentType.BlockComponent
+            ],
+            { haveChild: false }
+          )
+          // 把全部内容剪切到新插槽
+          slot?.cutTo(newSlot)
+
+          const newSlots = [newSlot]
+          if (afterSlot?.state?.haveChild) {
+            newSlots.push(afterSlot)
+          }
+
+          // 创建新的 listComponent
+          const component = listComponent.createInstance(injector, {
+            state: { type: state.type, level: state.level + 1 },
+            slots: newSlots
+          })
+          // 将新组件插入当前插槽
+          slot?.insert(component)
+          // 更新当前插槽状态
+          slot?.updateState((draft: ListSlotState) => {
+            draft.haveChild = true
+          })
+          selection.setPosition(newSlot, index)
+        }
+      }
+    })
+
+    onBreak((ev) => {
+      const slot = ev.target
+      const slotIndex = slots.indexOf(slot)
+      const afterSlot = slots.get(slotIndex + 1)
+
+      if (slot.isEmpty && slot === slots.last) {
+        // 获取当前插槽的父组件的父插槽
+        const parentSlot = slot.parentSlot
+        // 当前插槽的父组件的父插槽有子元素
+        if (parentSlot?.state?.haveChild) {
+          const newSlot = new Slot<ListSlotState>(
+            [
+              ContentType.Text,
+              ContentType.InlineComponent,
+              ContentType.BlockComponent
+            ],
+            { haveChild: false }
+          )
+          // 删除当前插槽
+          slots.remove(slot)
+          parentSlot.parent?.slots.insertAfter(newSlot, parentSlot)
+          selection.setPosition(newSlot, 0)
+        } else {
+          // 转换成文本
+          const paragraph = paragraphComponent.createInstance(injector)
+          const parentComponent = selection.commonAncestorComponent!
+          const parentSlot = parentComponent.parent!
+          const index = parentSlot.indexOf(parentComponent)
+          parentSlot.retain(index + 1)
+          if (slots.length > 1) {
+            slots.remove(slots.last)
+          }
+          parentSlot.insert(paragraph)
+          selection.setPosition(paragraph.slots.get(0)!, 0)
+        }
         ev.preventDefault()
         return
       }
+
       const nextLi = ev.target.cut(ev.data.index)
-      slots.insertAfter(nextLi, ev.target)
+      if (afterSlot?.state?.haveChild) {
+        afterSlot.sliceContent().forEach((item: any) => {
+          if (item.name === 'ListComponent') {
+            item.slots.unshift(nextLi)
+          }
+        })
+      } else {
+        slots.insertAfter(nextLi, ev.target)
+      }
       selection.setPosition(nextLi, 0)
       ev.preventDefault()
     })
 
     return {
-      type: state,
+      type: state.type,
       render(isOutputMode: boolean, slotRender: SlotRender): VElement {
-        const Tag = state
+        const Tag = state.type
         return (
-          <Tag>
-            {
-              slots.toArray().map(i => {
-                return slotRender(i, () => {
-                  return <li class="tb-list-item"/>
-                })
+          <Tag level={state.level} type={olTypeJudeg[state.level % 3]}>
+            {slots.toArray().map((slot) => {
+              const state = slot.state!
+              const liClass = state.haveChild
+                ? 'tb-list-item have-child'
+                : 'tb-list-item'
+              return slotRender(slot, () => {
+                return <li class={liClass} />
               })
-            }
+            })}
           </Tag>
         )
       },
@@ -114,17 +300,23 @@ export const listComponentLoader: ComponentLoader = {
     return element.tagName === 'OL' || element.tagName === 'UL'
   },
   resources: {
-    styles: ['.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em}']
+    styles: [
+      `.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em} 
+      .have-child {list-style: none}
+      
+      `
+    ]
   },
-  read(element: HTMLElement, injector: Injector, slotParser: SlotParser): ComponentInstance {
+  read(
+    element: HTMLElement,
+    injector: Injector,
+    slotParser: SlotParser
+  ): ComponentInstance {
     const slots: Slot[] = []
-
+    const level = element.getAttribute('level') || 1
     const childNodes = Array.from(element.childNodes)
     while (childNodes.length) {
-      const slot = new Slot([
-        ContentType.Text,
-        ContentType.InlineComponent
-      ])
+      const slot = new Slot([ContentType.Text, ContentType.InlineComponent])
       let first = childNodes.shift()
       let newLi: HTMLElement | null = null
       while (first) {
@@ -134,7 +326,10 @@ export const listComponentLoader: ComponentLoader = {
           break
         }
         if (!newLi) {
-          if (first.nodeType === Node.TEXT_NODE && (/^\s+$/.test(first.textContent!) || first.textContent === '')) {
+          if (
+            first.nodeType === Node.TEXT_NODE &&
+            (/^\s+$/.test(first.textContent!) || first.textContent === '')
+          ) {
             break
           }
           newLi = document.createElement('li')
@@ -150,7 +345,10 @@ export const listComponentLoader: ComponentLoader = {
     }
     return listComponent.createInstance(injector, {
       slots,
-      state: element.tagName.toLowerCase() as any
+      state: {
+        type: element.tagName.toLowerCase() as any,
+        level: Number(level)
+      }
     })
-  },
+  }
 }

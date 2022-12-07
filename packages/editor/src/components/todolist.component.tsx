@@ -9,6 +9,7 @@ import {
   Selection,
   Slot,
   useContext,
+  useDynamicShortcut,
   useSelf,
   useSlots,
   VElement
@@ -30,6 +31,7 @@ export interface TodoListSlotState {
   addUserIsOpen: boolean
   searchText: string
   positionId: string
+  level?: number
 }
 
 export interface TodoModalOptions {
@@ -48,7 +50,8 @@ export const initState: (value?: TodoListSlotState) => TodoListSlotState = (
     userList: [],
     addUserIsOpen: false,
     searchText: '',
-    positionId: nanoid()
+    positionId: nanoid(),
+    level: 0
   }
   if (!value) {
     return state
@@ -124,6 +127,37 @@ export const todolistComponent = defineComponent({
     const { openSetTimeModal, updateTodoList } = options.moduleAPI || {}
     const shareUsers = options.moduleAPI?.getShareUsers() || []
 
+    // 降级
+    useDynamicShortcut({
+      keymap: {
+        key: 'Tab',
+        shiftKey: true
+      },
+      action() {
+        // 获取当前插槽和下标位置
+        const slot = selection.commonAncestorSlot as Slot<TodoListSlotState>
+        slot?.updateState((draft) => {
+          const { level = 0 } = draft
+          if (level > 0) draft.level = level - 1
+        })
+      }
+    })
+
+    // 升级
+    useDynamicShortcut({
+      keymap: {
+        key: 'Tab'
+      },
+      action() {
+        // 获取当前插槽和下标位置
+        const slot = selection.commonAncestorSlot as Slot<TodoListSlotState>
+        slot?.updateState((draft) => {
+          const { level = 0 } = draft
+          draft.level = level + 1
+        })
+      }
+    })
+
     onBreak((ev) => {
       const slot = ev.target
       const index = ev.data.index
@@ -142,7 +176,9 @@ export const todolistComponent = defineComponent({
       } else {
         const nextSlot = slot.cut(index)
         //重置状态
-        nextSlot.state = initState()
+        nextSlot.state = initState({
+          level: slot.state.level || 0
+        } as TodoListSlotState)
 
         slots.insertAfter(nextSlot, slot)
         selection.setPosition(nextSlot, 0)
@@ -183,7 +219,10 @@ export const todolistComponent = defineComponent({
                 ? 'background_normal'
                 : 'background_normal background_no_time'
               if (readonly) timeClass += ' background_readonly'
-              if(state.endTime && dayjs(state.endTime).valueOf()<dayjs().valueOf()){
+              if (
+                state.endTime &&
+                dayjs(state.endTime).valueOf() < dayjs().valueOf()
+              ) {
                 timeClass += ' background_overdue'
               }
               const addUserClass = readonly
@@ -205,6 +244,7 @@ export const todolistComponent = defineComponent({
                   class={classes.join(' ')}
                   user-list={userList}
                   todo-time={state.endTime}
+                  style={{ marginLeft: `${(state.level || 0) * 22}px` }}
                 >
                   <div class="tb-todolist-btn">
                     <div
