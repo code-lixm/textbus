@@ -33,6 +33,10 @@ async function create() {
 
   const editor = createEditor({
     autoFocus: true,
+    content: '<ol><li>consul优化思路</li><ul><li>consul&nbsp;目录配置全局变量：ys/global/local/config/xxx</li></ul><ul><li>通过&nbsp;helm.build.sh&nbsp;打包脚本配置变量，由&nbsp;ctmpl&nbsp;文件读取配置</li></ul><ul><li>由打包的&nbsp;commit&nbsp;信息，拿到&nbsp;devops&nbsp;构建的环境变量，设置不同部署包的变量</li></ul></ol><ol><li>配置读取顺序</li><ol><li>首先是&nbsp;打包脚本：helm.build.sh</li><ol><li>可以在打包脚本中导出变量&nbsp;export&nbsp;xxx</li><li>export&nbsp;的变量可以在&nbsp;consul&nbsp;的钩子函数中读取，通过&nbsp;$xxx&nbsp;读取</li></ol></ol></ol><ol><ol><li>部署运行&nbsp;consul-job&nbsp;时，会将部署包中的&nbsp;ctmpl&nbsp;文件中的值写入到&nbsp;consul&nbsp;当中</li><ol><li>ctmpl&nbsp;文件中可以读取&nbsp;values.yaml&nbsp;文件中钩子函数定义的环境变量</li></ol></ol></ol><ul><li>现有问题</li><ul><li>不同环境下，需要手动修改值，例如在开发网打包的值是正式环境的值，在测试网需要手动修改值</li></ul></ul>',
+    // content: '<ul><li>vsdvsZdvvsdvs</li></ul><ul><li>vzskvzsdv</li></ul><ul><li>svsdvsd<span data-w-e-type="mention" data-w-e-is-void data-w-e-is-inline data-value="hehx" data-info="faf3937d83fe4e89b04f92b7613b497f">@hehx</span></li></ul><p><br></p><p><br></p><table style="width: 100%;"><tbody><tr><th colSpan="1" rowSpan="1">你好shklVSDVC0</th><th colSpan="1" rowSpan="1">123456</th><th colSpan="1" rowSpan="1">ccSCV</th><th colSpan="1" rowSpan="1">KL：CVSD</th></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr><tr><td colSpan="1" rowSpan="1">　∫≈∫&copy;ç你</td><td colSpan="1" rowSpan="1">z&nbsp;d&nbsp;f&nbsp;g&nbsp;b&nbsp;d&nbsp;f&nbsp;g&nbsp;b</td><td colSpan="1" rowSpan="1">f&nbsp;d&nbsp;z&nbsp;g&nbsp;d&nbsp;f</td><td colSpan="1" rowSpan="1">d&nbsp;f&nbsp;z&nbsp;g&nbsp;f&nbsp;d</td></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr><tr><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td><td colSpan="1" rowSpan="1"></td></tr></tbody></table><p>&nbsp;&nbsp;&nbsp;</p><p><br></p><pre><code class="language-css">fdfA9EG</code></pre><p><br></p><p><span data-w-e-type="mention" data-w-e-is-void data-w-e-is-inline data-value="zhangzz" data-info="8232311d5daa4df497dcf10bcdd190ce">@zhangzz</span></p>',
+    // content: '<p>首先试试@人的功能，这里<span data-w-e-type="mention" data-w-e-is-void data-w-e-is-inline data-value="hehx" data-info="faf3937d83fe4e89b04f92b7613b497f">@hehx</span>和<span data-w-e-type="mention" data-w-e-is-void data-w-e-is-inline data-value="胡京辉" data-info="9cc9d1c290bd41dab9dd7b741cb9cdd1">@胡京辉</span></p><div data-w-e-type="myTodo" data-select-userList="胡京辉&&9cc9d1c290bd41dab9dd7b741cb9cdd1;;hehx&&faf3937d83fe4e89b04f92b7613b497f;;" data-select-time="2022-12-09 14:31" data-select-positionId="90e995ac-d466-42d4-b147-574873e095cc"><input type="checkbox" disabled >这是一条待办功能，并且有时间</div><div data-w-e-type="myTodo" data-select-userList="hehx&&faf3937d83fe4e89b04f92b7613b497f;;胡京辉&&9cc9d1c290bd41dab9dd7b741cb9cdd1;;" data-select-time="" data-select-positionId="95b4999e-caeb-45e5-9535-744b0e12a909"><input type="checkbox" disabled checked>坎坎坷坷扩扩扩扩扩扩扩扩扩扩扩扩</div>',
+    // content: '<span component-name="MentionComponent"></span>',
     // i18n: i18n_en_US,
     autoHeight: true,
     zenCoding: true,
@@ -207,55 +211,55 @@ create().then((editor) => {
   });
 
   editor.onReady.subscribe(() => {
-    const content = {
-      name: "RootComponent",
-      state: null,
-      slots: [
-        {
-          schema: [1, 2, 3],
-          content: [
-            {
-              name: "ParagraphComponent",
-              state: null,
-              slots: [
-                {
-                  schema: [1, 2],
-                  content: [
-                    {
-                      name: "MentionComponent",
-                      state: {
-                        isSelected: true,
-                        username: "1",
-                        authId: "123",
-                        currentUser: "1",
-                      },
-                      slots: [
-                        {
-                          schema: [2],
-                          content: ["\n"],
-                          formats: {},
-                          state: null,
-                        },
-                      ],
-                    },
-                    " ",
-                  ],
-                  formats: {},
-                  state: null,
-                },
-              ],
-            },
-          ],
-          formats: {},
-          state: null,
-        },
-      ],
-    };
-    editor.replaceContent(content);
+    // const content = {
+    //   name: "RootComponent",
+    //   state: null,
+    //   slots: [
+    //     {
+    //       schema: [1, 2, 3],
+    //       content: [
+    //         {
+    //           name: "ParagraphComponent",
+    //           state: null,
+    //           slots: [
+    //             {
+    //               schema: [1, 2],
+    //               content: [
+    //                 {
+    //                   name: "MentionComponent",
+    //                   state: {
+    //                     isSelected: true,
+    //                     username: "1",
+    //                     authId: "123",
+    //                     currentUser: "1",
+    //                   },
+    //                   slots: [
+    //                     {
+    //                       schema: [2],
+    //                       content: ["\n"],
+    //                       formats: {},
+    //                       state: null,
+    //                     },
+    //                   ],
+    //                 },
+    //                 " ",
+    //               ],
+    //               formats: {},
+    //               state: null,
+    //             },
+    //           ],
+    //         },
+    //       ],
+    //       formats: {},
+    //       state: null,
+    //     },
+    //   ],
+    // };
+    // editor.replaceContent(content);
   });
 
   editor.onChange.subscribe(() => {
     // const root = editor.injector!.get(RootComponentRef)
-    // console.log(editor.getJSON());
+    console.log(editor.getJSON());
   });
 });

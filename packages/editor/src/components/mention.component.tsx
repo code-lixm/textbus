@@ -277,7 +277,7 @@ export const mentionComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
     return (
       element.tagName === 'SPAN' &&
-      element.getAttribute('component-name') === 'MentionComponent'
+      (element.getAttribute('component-name') === 'MentionComponent' || element.getAttribute('data-w-e-type') === 'mention')
     )
   },
   read(
@@ -287,15 +287,15 @@ export const mentionComponentLoader: ComponentLoader = {
   ): ComponentInstance {
     return mentionComponent.createInstance(context, {
       state: {
-        isSelected: element.dataset.authId || '' ? true : false,
-        authId: element.dataset.authId || '',
-        username: element.dataset.username || '',
+        isSelected: (element.dataset.authId || element.dataset.value) || '' ? true : false,
+        authId: (element.dataset.authId || element.dataset.info) || '',
+        username: (element.dataset.username || element.dataset.value) || '',
         currentUser: '',
       },
       slots: [
         slotParser(
           new Slot([ContentType.InlineComponent]),
-          element.children[0] as HTMLElement
+          element
         )
       ]
     })

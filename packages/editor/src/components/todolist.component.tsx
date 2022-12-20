@@ -570,7 +570,7 @@ export const todolistComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
     return (
       element.tagName === 'DIV' &&
-      element.getAttribute('component-name') === 'TodoComponent'
+      (element.getAttribute('component-name') === 'TodoComponent' || element.getAttribute('data-w-e-type') === 'myTodo')
     )
   },
   read(
@@ -578,7 +578,33 @@ export const todolistComponentLoader: ComponentLoader = {
     context: Injector,
     slotParser: SlotParser
   ): ComponentInstance {
-    const listConfig = Array.from(element.children).map((child) => {
+    const isOld = element.getAttribute('data-w-e-type') === 'myTodo'
+
+    const oldListConfig = Array.from(element.children).map((child) => {
+      const isChecked = Boolean(child.getAttribute('checked'))
+      const isDisabled = Boolean(child.getAttribute('disabled'))
+      const userList = element.getAttribute('data-select-userList') || ''
+      const endTime = element.getAttribute('data-select-time') || ''
+      const positionId = element.getAttribute('data-select-positionId') || ''
+
+      const spanElement = document.createElement('span')
+      spanElement.innerText = element.innerText || ''
+      return {
+        childSlot: spanElement,
+        slot: new Slot<TodoListSlotState>(
+          [ContentType.Text, ContentType.InlineComponent],
+          initState({
+            status: isChecked,
+            disabled: isDisabled,
+            endTime,
+            userList: parse(userList),
+            positionId
+          } as TodoListSlotState)
+        )
+      }
+    })
+
+    const newListConfig = Array.from(element.children).map((child) => {
       const stateElement = child.querySelector('.tb-todolist-state')
       const userList = child.getAttribute('user-list') || ''
       const endTime = child.getAttribute('todo-time') || ''
@@ -601,8 +627,11 @@ export const todolistComponentLoader: ComponentLoader = {
       }
     })
 
+    const target = isOld ? oldListConfig : newListConfig
+
+
     return todolistComponent.createInstance(context, {
-      slots: listConfig.map((i) => {
+      slots: target.map((i) => {
         return slotParser(i.slot, i.childSlot)
       })
     })

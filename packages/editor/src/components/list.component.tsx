@@ -19,7 +19,7 @@ import {
 import { ComponentLoader, SlotParser } from '@textbus/browser'
 import { paragraphComponent } from '@textbus/editor'
 
-const olTypeJudeg: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
+const olTypeJudge: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
 
 export interface SegmentedSlots<T extends Slot = Slot> {
   before: T[]
@@ -271,12 +271,12 @@ export const listComponent = defineComponent({
       render(isOutputMode: boolean, slotRender: SlotRender): VElement {
         const Tag = state.type
         return (
-          <Tag level={state.level} type={olTypeJudeg[state.level % 3]}>
+          <Tag level={state.level} type={olTypeJudge[state.level % 3]}>
             {slots.toArray().map((slot) => {
-              const state = slot.state!
-              const liClass = state.haveChild
+              const state = slot.state
+              const liClass = state ? (state.haveChild
                 ? 'tb-list-item have-child'
-                : 'tb-list-item'
+                : 'tb-list-item') : 'tb-list-item'
               return slotRender(slot, () => {
                 return <li class={liClass} />
               })
@@ -301,9 +301,8 @@ export const listComponentLoader: ComponentLoader = {
   },
   resources: {
     styles: [
-      `.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em} 
+      `.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em}
       .have-child {list-style: none}
-      
       `
     ]
   },
