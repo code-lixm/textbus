@@ -126,7 +126,7 @@
 //     ]
 //   },
 //   match(element: HTMLElement): boolean {
-//     return element.tagName === 'span' && element.getAttribute('component-name') === 'KatexComponent'
+//     return element.tagName === 'SPAN' && element.getAttribute('component-name') === 'KatexComponent'
 //   },
 //   read(element: HTMLElement, context: Injector): ComponentInstance {
 //     return katexComponent.createInstance(context, {

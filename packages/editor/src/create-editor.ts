@@ -99,6 +99,7 @@ import {
 import { LinkJumpTipPlugin, MentionPlugin } from './plugins/_api'
 
 export const defaultComponentLoaders: ComponentLoader[] = [
+  attachmentComponentLoader,
   imageCardComponentLoader,
   todolistComponentLoader,
   // katexComponentLoader,
@@ -119,7 +120,6 @@ export const defaultComponentLoaders: ComponentLoader[] = [
   videoComponentLoader,
   mentionComponentLoader,
   iframeComponentLoader,
-  attachmentComponentLoader,
 ]
 
 export const defaultFormatLoaders: FormatLoader[] = [

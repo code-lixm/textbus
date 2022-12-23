@@ -17,7 +17,7 @@ import {
   useDynamicShortcut
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/browser'
-import { paragraphComponent } from '@textbus/editor'
+import { paragraphComponent } from './paragraph.component'
 
 const olTypeJudge: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
 
@@ -53,7 +53,7 @@ export const listComponent = defineComponent({
       return {
         state: {
           type: /[-+*]/.test(content) ? 'ul' : 'ol',
-          level: 0
+          level: 1
         }
       }
     }
@@ -152,7 +152,6 @@ export const listComponent = defineComponent({
             parentSlot.parent?.slots.remove(parentSlot)
           }
           selection.setPosition(slot, slotIndex)
-          console.log('降级', index)
         }
       }
     })
@@ -165,20 +164,21 @@ export const listComponent = defineComponent({
         // 获取当前插槽和下标位置
         const slot = selection.commonAncestorSlot!
         const slotIndex = slots.indexOf(slot)
-        const index = slot?.index || 0
-        const beforSlot = slots.get(slotIndex - 1)
+        const index = slot.index || 0
+        const beforeSlot = slots.get(slotIndex - 1)
         const afterSlot = slots.get(slotIndex + 1)
         // 不允许缩进第一个子元素
         if (slotIndex === 0) return
 
         // 如果当前插槽的前一个插槽有子元素，则将此插槽进行合并
-        if (beforSlot?.state?.haveChild) {
-          beforSlot.sliceContent().forEach((item: any) => {
-            if (item.name === 'ListComponent') {
-              item.slots.push(slot)
-              afterSlot?.state?.haveChild && item.slots.push(afterSlot)
-            }
-          })
+        if (beforeSlot?.state?.haveChild) {
+            beforeSlot.sliceContent().forEach((item: any) => {
+              if (item.name === 'ListComponent') {
+                item.slots.push(slot)
+                afterSlot?.state?.haveChild && item.slots.push(afterSlot)
+              }
+            })
+
         } else {
           // 创建新插槽
           const newSlot = new Slot<ListSlotState>(
@@ -206,7 +206,9 @@ export const listComponent = defineComponent({
           slot?.insert(component)
           // 更新当前插槽状态
           slot?.updateState((draft: ListSlotState) => {
-            draft.haveChild = true
+            if(draft) {
+              draft.haveChild = true
+            }
           })
           selection.setPosition(newSlot, index)
         }
@@ -271,14 +273,12 @@ export const listComponent = defineComponent({
       render(isOutputMode: boolean, slotRender: SlotRender): VElement {
         const Tag = state.type
         return (
-          <Tag level={state.level} type={olTypeJudge[state.level % 3]}>
+          <Tag level={state.level} type={olTypeJudge[state.level % 3]} class='tb-list-item'>
             {slots.toArray().map((slot) => {
               const state = slot.state
-              const liClass = state ? (state.haveChild
-                ? 'tb-list-item have-child'
-                : 'tb-list-item') : 'tb-list-item'
+              const CustomTag = state?.haveChild ? 'div' : 'li'
               return slotRender(slot, () => {
-                return <li class={liClass} />
+                return <CustomTag />
               })
             })}
           </Tag>

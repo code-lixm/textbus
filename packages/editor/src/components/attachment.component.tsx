@@ -142,15 +142,16 @@ export const attachmentComponentLoader: ComponentLoader = {
   },
   match(element: HTMLElement): boolean {
     return (
-      element.tagName === 'span' &&
-      element.getAttribute('component-name') === 'AttachmentComponent'
+      element.tagName === 'SPAN' &&
+      (element.getAttribute('component-name') === 'AttachmentComponent' || element.getAttribute('data-w-e-type') === 'attachment')
     )
   },
   read(element: HTMLElement, context: Injector): ComponentInstance {
+    console.log('%c [ element ]-150', 'font-size:13px; background:#cc2485; color:#ff68c9;', element.dataset)
     return attachmentComponent.createInstance(context, {
       state: {
-        url: element.dataset.url!,
-        name: `${element.dataset.name || new Date().toLocaleString()}`
+        url: (element.dataset.url || element.dataset.link) || '',
+        name: `${element.dataset.name || element.dataset.filename || new Date().toLocaleString()}`
       }
     })
   }

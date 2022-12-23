@@ -570,7 +570,10 @@ export const todolistComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
     return (
       element.tagName === 'DIV' &&
-      (element.getAttribute('component-name') === 'TodoComponent' || element.getAttribute('data-w-e-type') === 'myTodo')
+      (
+        element.getAttribute('component-name') === 'TodoComponent'
+        || ['myTodo', 'todo'].includes(element.getAttribute('data-w-e-type') || '')
+      )
     )
   },
   read(
@@ -578,9 +581,9 @@ export const todolistComponentLoader: ComponentLoader = {
     context: Injector,
     slotParser: SlotParser
   ): ComponentInstance {
-    const isOld = element.getAttribute('data-w-e-type') === 'myTodo'
+    const isOld = ['myTodo', 'todo'].includes(element.getAttribute('data-w-e-type') || '')
+    const oldListConfig = Array.from(element.children).filter(item => item instanceof HTMLInputElement).map((child) => {
 
-    const oldListConfig = Array.from(element.children).map((child) => {
       const isChecked = Boolean(child.getAttribute('checked'))
       const isDisabled = Boolean(child.getAttribute('disabled'))
       const userList = element.getAttribute('data-select-userList') || ''
@@ -588,7 +591,7 @@ export const todolistComponentLoader: ComponentLoader = {
       const positionId = element.getAttribute('data-select-positionId') || ''
 
       const spanElement = document.createElement('span')
-      spanElement.innerText = element.innerText || ''
+      spanElement.innerHTML = element.innerHTML || ''
       return {
         childSlot: spanElement,
         slot: new Slot<TodoListSlotState>(
@@ -603,7 +606,6 @@ export const todolistComponentLoader: ComponentLoader = {
         )
       }
     })
-
     const newListConfig = Array.from(element.children).map((child) => {
       const stateElement = child.querySelector('.tb-todolist-state')
       const userList = child.getAttribute('user-list') || ''
@@ -628,7 +630,6 @@ export const todolistComponentLoader: ComponentLoader = {
     })
 
     const target = isOld ? oldListConfig : newListConfig
-
 
     return todolistComponent.createInstance(context, {
       slots: target.map((i) => {
