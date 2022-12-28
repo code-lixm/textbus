@@ -129,7 +129,7 @@ export const attachmentComponentLoader: ComponentLoader = {
 }
 .tb-attachment img {
   max-width: 15px;
-  height: 100%;
+  height: 15px;
   margin-right: 5px;
   position: relative;
   top: 1px;

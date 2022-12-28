@@ -172,12 +172,12 @@ export const listComponent = defineComponent({
 
         // 如果当前插槽的前一个插槽有子元素，则将此插槽进行合并
         if (beforeSlot?.state?.haveChild) {
-            beforeSlot.sliceContent().forEach((item: any) => {
-              if (item.name === 'ListComponent') {
-                item.slots.push(slot)
-                afterSlot?.state?.haveChild && item.slots.push(afterSlot)
-              }
-            })
+          beforeSlot.sliceContent().forEach((item: any) => {
+            if (item.name === 'ListComponent') {
+              item.slots.push(slot)
+              afterSlot?.state?.haveChild && item.slots.push(afterSlot)
+            }
+          })
 
         } else {
           // 创建新插槽
@@ -206,7 +206,7 @@ export const listComponent = defineComponent({
           slot?.insert(component)
           // 更新当前插槽状态
           slot?.updateState((draft: ListSlotState) => {
-            if(draft) {
+            if (draft) {
               draft.haveChild = true
             }
           })
@@ -215,11 +215,13 @@ export const listComponent = defineComponent({
       }
     })
 
+    // 回车创建新行
     onBreak((ev) => {
       const slot = ev.target
       const slotIndex = slots.indexOf(slot)
       const afterSlot = slots.get(slotIndex + 1)
 
+      // 当前插槽为空或者为最后一个插槽，向父节点创建
       if (slot.isEmpty && slot === slots.last) {
         // 获取当前插槽的父组件的父插槽
         const parentSlot = slot.parentSlot
@@ -254,6 +256,7 @@ export const listComponent = defineComponent({
         return
       }
 
+      // 正常向后插入
       const nextLi = ev.target.cut(ev.data.index)
       if (afterSlot?.state?.haveChild) {
         afterSlot.sliceContent().forEach((item: any) => {
@@ -273,7 +276,7 @@ export const listComponent = defineComponent({
       render(isOutputMode: boolean, slotRender: SlotRender): VElement {
         const Tag = state.type
         return (
-          <Tag level={state.level} type={olTypeJudge[state.level % 3]} class='tb-list-item'>
+          <Tag level={state.level} type={olTypeJudge[state.level % 3]} class={state.level <= 1 ? 'tb-list-item' : ''}>
             {slots.toArray().map((slot) => {
               const state = slot.state
               const CustomTag = state?.haveChild ? 'div' : 'li'
@@ -313,28 +316,28 @@ export const listComponentLoader: ComponentLoader = {
   ): ComponentInstance {
     const slots: Slot[] = []
     const level = element.getAttribute('level') || 1
+
     const childNodes = Array.from(element.childNodes)
     while (childNodes.length) {
       const slot = new Slot([ContentType.Text, ContentType.InlineComponent])
-      let first = childNodes.shift()
+      let head = childNodes.shift()
       let newLi: HTMLElement | null = null
-      while (first) {
-        if (/^li$/i.test(first.nodeName)) {
+      while (head) {
+        if (/^li$/i.test(head.nodeName)) {
           slots.push(slot)
-          slotParser(slot, first as HTMLElement)
+          slotParser(slot, head as HTMLElement)
           break
         }
         if (!newLi) {
-          if (
-            first.nodeType === Node.TEXT_NODE &&
-            (/^\s+$/.test(first.textContent!) || first.textContent === '')
-          ) {
+          const isText = head.nodeType === Node.TEXT_NODE
+          const isEmpty = /^\s+$/.test(head.textContent!) || head.textContent === ''
+          if (isText && isEmpty) {
             break
           }
           newLi = document.createElement('li')
         }
-        newLi.appendChild(first)
-        first = childNodes.shift()
+        newLi.appendChild(head)
+        head = childNodes.shift()
       }
       if (newLi) {
         slots.push(slot)

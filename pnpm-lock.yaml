@@ -37,7 +37,6 @@ importers:
       ip: ^1.1.5
       jest: ^27.5.1
       jest-canvas-mock: ^2.4.0
-      katex: ^0.16.0
       lerna: ^4.0.0
       lint-staged: ^13.0.2
       loader-utils: ^3.2.0
@@ -69,7 +68,6 @@ importers:
       '@tanbo/stream': 1.1.9
       dayjs: 1.11.6
       immer: 9.0.16
-      katex: 0.16.3
       prismjs: 1.29.0
       reflect-metadata: 0.1.13
       y-webrtc: 10.2.3
@@ -5116,6 +5114,7 @@ packages:
   /commander/8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
+    dev: true
 
   /commander/9.4.1:
     resolution: {integrity: sha512-5EEkTNyHNGFPD2H+c/dXXfQZYa/scCKasxWcXJaWnNJ99pnQN9Vnmqow+p+PlFPE63Q6mThaZws1T+HxfpgtPw==}
@@ -8652,13 +8651,6 @@ packages:
   /just-debounce/1.1.0:
     resolution: {integrity: sha512-qpcRocdkUmf+UTNBYx5w6dexX5J31AKK1OmPwH630a83DdVVUIngk55RSAiIGpQyoH0dlr872VHfPjnQnK1qDQ==}
     dev: true
-
-  /katex/0.16.3:
-    resolution: {integrity: sha512-3EykQddareoRmbtNiNEDgl3IGjryyrp2eg/25fHDEnlHymIDi33bptkMv6K4EOC2LZCybLW/ZkEo6Le+EM9pmA==}
-    hasBin: true
-    dependencies:
-      commander: 8.3.0
-    dev: false
 
   /kind-of/3.2.2:
     resolution: {integrity: sha512-NOW9QQXMoZGg/oqnVNoNTTIFEIid1627WCffUBJEdMxYApq7mNE7CpzucIPc+ZQg25Phej7IJSmX3hO+oblOtQ==}
@@ -13405,7 +13397,7 @@ packages:
     dev: true
 
   /ws/6.2.2:
-    resolution: {integrity: sha512-zmhltoSR8u1cnDsD43TX59mzoMZsLKqUweyYBAIvTngR3shc0W6aOZylZmq/7hqyVxPdi+5Ud2QInblgyE72fw==}
+    resolution: {integrity: sha1-3Vzb1XqZeZFgl2UtePHMX66gwy4=}
     requiresBuild: true
     peerDependencies:
       bufferutil: ^4.0.1

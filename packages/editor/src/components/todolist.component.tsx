@@ -445,7 +445,7 @@ export const todolistComponentLoader: ComponentLoader = {
   color: #999999;
 }
 .tb-todolist-state-disabled {
-  opacity: 0.5;
+  cursor: not-allowed;
 }
 .tb-todolist-content {
   flex: 1;
@@ -581,11 +581,14 @@ export const todolistComponentLoader: ComponentLoader = {
     context: Injector,
     slotParser: SlotParser
   ): ComponentInstance {
+    // 旧数据兼容
     const isOld = ['myTodo', 'todo'].includes(element.getAttribute('data-w-e-type') || '')
-    const oldListConfig = Array.from(element.children).filter(item => item instanceof HTMLInputElement).map((child) => {
 
-      const isChecked = Boolean(child.getAttribute('checked'))
-      const isDisabled = Boolean(child.getAttribute('disabled'))
+    // 旧数据
+    const oldListConfig = Array.from(element.children).filter(item => item instanceof HTMLInputElement).map((child) => {
+      const isChecked = Boolean(child.hasAttribute('checked'))
+      // const isDisabled = Boolean(child.hasAttribute('disabled'))
+      const isDisabled = false
       const userList = element.getAttribute('data-select-userList') || ''
       const endTime = element.getAttribute('data-select-time') || ''
       const positionId = element.getAttribute('data-select-positionId') || ''
@@ -606,6 +609,7 @@ export const todolistComponentLoader: ComponentLoader = {
         )
       }
     })
+    // 新数据
     const newListConfig = Array.from(element.children).map((child) => {
       const stateElement = child.querySelector('.tb-todolist-state')
       const userList = child.getAttribute('user-list') || ''

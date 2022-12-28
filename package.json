@@ -106,7 +106,6 @@
     "dayjs": "^1.11.6",
     "@tanbo/stream": "^1.1.9",
     "immer": "^9.0.12",
-    "katex": "^0.16.0",
     "prismjs": "^1.23.0",
     "reflect-metadata": "^0.1.13",
     "y-webrtc": "^10.0.4",

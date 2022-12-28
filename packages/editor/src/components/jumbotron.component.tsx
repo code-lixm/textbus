@@ -95,10 +95,13 @@ export const jumbotronComponent = defineComponent({
             fileUploader,
             uploadBtnText: childI18n.get('uploadBtnText'),
             validateFn(value: string): string | false {
-              if (!(/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))) {
-                return childI18n.get('validateErrorMessage')
+              // eslint-disable-next-line max-len
+              const isValidInternetUrl = (/^(((ht|f)tps?):\/\/)?([^!@#$%^&*?.\s-]([^!@#$%^&*?.\s]{0,63}[^!@#$%^&*?.\s])?\.)+[a-z]{2,6}\/?/.test(value))
+              const isValidLocalUrl = value.includes('/api/extension/file/download?fileId=')
+              if (isValidInternetUrl || isValidLocalUrl) {
+                return false
               }
-              return false
+              return childI18n.get('validateErrorMessage')
             }
           })
         ]
