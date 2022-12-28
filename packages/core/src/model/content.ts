@@ -1,5 +1,32 @@
 import { ComponentInstance, ComponentLiteral } from './component'
 
+function findBeforeIndex(str: string, index: number) {
+  let offset = index
+  while (offset > 0) {
+    const current = str.charAt(offset)
+    if (current === '\u200d') {
+      offset--
+      continue
+    }
+    const before = str.charAt(offset - 1)
+    if (before === '\u200d') {
+      offset -= 2
+      continue
+    }
+    const before2 = str.charAt(offset - 2)
+    if (before2 === '\u200d') {
+      offset -= 3
+      continue
+    }
+    const s = before + current
+    if ([...s].length === 1) {
+      offset--
+    }
+    break
+  }
+  return offset
+}
+
 /**
  * Textbus 内容管理类
  */
@@ -19,18 +46,23 @@ export class Content {
       const itemLength = item.length
       if (typeof item === 'string') {
         if (index > i && index < i + itemLength) {
-          const segmenter = new Intl.Segmenter()
-          const segments = segmenter.segment(item)
-          let offset = 0
-          for (const p of segments) {
-            const segmentLength = p.segment.length
-            if (index > i + offset && index < i + offset + segmentLength) {
-              return toEnd ? i + offset + segmentLength : i + offset
+          const startIndex = findBeforeIndex(item, index - i)
+          if (toEnd) {
+            const segmenter = new Intl.Segmenter()
+            const segments = segmenter.segment(item.slice(startIndex, startIndex + 20))
+            let offset = startIndex
+            for (const p of segments) {
+              const segmentLength = p.segment.length
+              if (index > i + offset && index < i + offset + segmentLength) {
+                return i + offset + segmentLength
+              }
+              offset += segmentLength
+              if (i + offset > index) {
+                return index
+              }
             }
-            offset += segmentLength
-            if (i + offset > index) {
-              return index
-            }
+          } else {
+            return startIndex + i
           }
         }
       }
