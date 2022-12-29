@@ -96,7 +96,7 @@ import {
   strikeThroughTool, tableAddTool, tableRemoveTool, textAlignTool, textBackgroundTool, textIndentTool, ulTool,
   underlineTool, unlinkTool, ToolFactory, componentsTool, formatPainterTool, attachmentTool, todolistTool
 } from './toolbar/_api'
-import { LinkJumpTipPlugin, MentionPlugin } from './plugins/_api'
+import { LinkJumpTipPlugin, MentionPlugin, ContextMenu } from './plugins/_api'
 
 export const defaultComponentLoaders: ComponentLoader[] = [
   attachmentComponentLoader,
@@ -226,7 +226,8 @@ export function createEditor(options: EditorOptions = {}) {
     plugins: [
       () => new Toolbar(defaultTools),
       () => new LinkJumpTipPlugin(),
-      () => new MentionPlugin()
+      () => new MentionPlugin(),
+      () => new ContextMenu(),
     ],
     ...defaultOptions,
     ...options
