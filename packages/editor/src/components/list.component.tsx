@@ -14,7 +14,7 @@ import {
   ComponentInitData,
   useState,
   onDestroy,
-  useDynamicShortcut
+  useDynamicShortcut,
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/browser'
 import { paragraphComponent } from './paragraph.component'
@@ -22,24 +22,24 @@ import { paragraphComponent } from './paragraph.component'
 const olTypeJudge: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
 
 export interface SegmentedSlots<T extends Slot = Slot> {
-  before: T[]
-  middle: T[]
-  after: T[]
+  before: T[];
+  middle: T[];
+  after: T[];
 }
 
 export interface ListSlotState {
-  haveChild: boolean
+  haveChild: boolean;
 }
 
 export interface ListComponentData {
-  type: 'ul' | 'ol'
-  level: number
+  type: 'ul' | 'ol';
+  level: number;
 }
 
 export interface ListComponentExtends extends ComponentExtends {
-  type: 'ul' | 'ol'
+  type: 'ul' | 'ol';
 
-  split?(startIndex: number, endIndex: number): SegmentedSlots
+  split?(startIndex: number, endIndex: number): SegmentedSlots;
 }
 
 export const listComponent = defineComponent({
@@ -53,10 +53,10 @@ export const listComponent = defineComponent({
       return {
         state: {
           type: /[-+*]/.test(content) ? 'ul' : 'ol',
-          level: 1
-        }
+          level: 1,
+        },
       }
-    }
+    },
   },
   setup(
     data?: ComponentInitData<ListComponentData, ListSlotState>
@@ -81,19 +81,19 @@ export const listComponent = defineComponent({
           [
             ContentType.Text,
             ContentType.InlineComponent,
-            ContentType.BlockComponent
+            ContentType.BlockComponent,
           ],
           {
-            haveChild: false
+            haveChild: false,
           }
-        )
+        ),
       ]
     )
     // 降级
     useDynamicShortcut({
       keymap: {
         key: 'Tab',
-        shiftKey: true
+        shiftKey: true,
       },
       action() {
         // 获取当前插槽
@@ -133,14 +133,14 @@ export const listComponent = defineComponent({
                 [
                   ContentType.Text,
                   ContentType.InlineComponent,
-                  ContentType.BlockComponent
+                  ContentType.BlockComponent,
                 ],
                 { haveChild: true }
               )
               // 创建新的 listComponent
               const component = listComponent.createInstance(injector, {
                 state: { type: state.type, level: state.level },
-                slots: deleteSlots
+                slots: deleteSlots,
               })
               // 将新组件插入当前插槽
               newSlot.insert(component)
@@ -153,12 +153,12 @@ export const listComponent = defineComponent({
           }
           selection.setPosition(slot, slotIndex)
         }
-      }
+      },
     })
     // 升级
     useDynamicShortcut({
       keymap: {
-        key: 'Tab'
+        key: 'Tab',
       },
       action() {
         // 获取当前插槽和下标位置
@@ -178,14 +178,13 @@ export const listComponent = defineComponent({
               afterSlot?.state?.haveChild && item.slots.push(afterSlot)
             }
           })
-
         } else {
           // 创建新插槽
           const newSlot = new Slot<ListSlotState>(
             [
               ContentType.Text,
               ContentType.InlineComponent,
-              ContentType.BlockComponent
+              ContentType.BlockComponent,
             ],
             { haveChild: false }
           )
@@ -200,7 +199,7 @@ export const listComponent = defineComponent({
           // 创建新的 listComponent
           const component = listComponent.createInstance(injector, {
             state: { type: state.type, level: state.level + 1 },
-            slots: newSlots
+            slots: newSlots,
           })
           // 将新组件插入当前插槽
           slot?.insert(component)
@@ -212,7 +211,7 @@ export const listComponent = defineComponent({
           })
           selection.setPosition(newSlot, index)
         }
-      }
+      },
     })
 
     // 回车创建新行
@@ -231,7 +230,7 @@ export const listComponent = defineComponent({
             [
               ContentType.Text,
               ContentType.InlineComponent,
-              ContentType.BlockComponent
+              ContentType.BlockComponent,
             ],
             { haveChild: false }
           )
@@ -276,7 +275,11 @@ export const listComponent = defineComponent({
       render(isOutputMode: boolean, slotRender: SlotRender): VElement {
         const Tag = state.type
         return (
-          <Tag level={state.level} type={olTypeJudge[state.level % 3]} class={state.level <= 1 ? 'tb-list-item' : ''}>
+          <Tag
+            level={state.level}
+            type={olTypeJudge[state.level % 3]}
+            class={state.level <= 1 ? 'tb-list-item' : ''}
+          >
             {slots.toArray().map((slot) => {
               const state = slot.state
               const CustomTag = state?.haveChild ? 'div' : 'li'
@@ -291,23 +294,28 @@ export const listComponent = defineComponent({
         return {
           before: slots.slice(0, startIndex),
           middle: slots.slice(startIndex, endIndex),
-          after: slots.slice(endIndex)
+          after: slots.slice(endIndex),
         }
-      }
+      },
     }
-  }
+  },
 })
 
 export const listComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
-    return element.tagName === 'OL' || element.tagName === 'UL'
+    return (
+      element.getAttribute('component-name') === 'List'
+      // ||
+      // element.tagName === "OL" ||
+      // element.tagName === "UL"
+    )
   },
   resources: {
     styles: [
       `.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em}
       .have-child {list-style: none}
-      `
-    ]
+      `,
+    ],
   },
   read(
     element: HTMLElement,
@@ -316,41 +324,60 @@ export const listComponentLoader: ComponentLoader = {
   ): ComponentInstance {
     const slots: Slot[] = []
     const level = element.getAttribute('level') || 1
+    console.log({ element, childNodes: Array.from(element.childNodes) })
 
-    const childNodes = Array.from(element.childNodes)
-    while (childNodes.length) {
-      const slot = new Slot([ContentType.Text, ContentType.InlineComponent])
-      let head = childNodes.shift()
-      let newLi: HTMLElement | null = null
-      while (head) {
-        if (/^li$/i.test(head.nodeName)) {
+    function ergodicNode(element: HTMLElement, slots: Slot[], level: number) {
+      // 获取列表项
+      const childNodes = Array.from(element.childNodes)
+      // 遍历列表项
+      childNodes.forEach((node) => {
+        // 处理li
+        if (/^li$/i.test(node.nodeName)) {
+          const slot = new Slot<ListSlotState>(
+            [
+              ContentType.Text,
+              ContentType.InlineComponent,
+              ContentType.BlockComponent,
+            ],
+            {
+              haveChild: false,
+            }
+          )
+          slotParser(slot, node as HTMLElement)
           slots.push(slot)
-          slotParser(slot, head as HTMLElement)
-          break
+        } else {
+          // 处理ol/ul
+          const slot = new Slot<ListSlotState>(
+            [
+              ContentType.Text,
+              ContentType.InlineComponent,
+              ContentType.BlockComponent,
+            ],
+            {
+              haveChild: true,
+            }
+          )
+          const newSlots: Slot[] = []
+          level++
+          ergodicNode(node as HTMLElement, newSlots, level)
+          const component = listComponent.createInstance(injector, {
+            state: { type: element.tagName.toLowerCase() as any, level },
+            slots: newSlots,
+          })
+          slot.insert(component)
+          slots.push(slot)
         }
-        if (!newLi) {
-          const isText = head.nodeType === Node.TEXT_NODE
-          const isEmpty = /^\s+$/.test(head.textContent!) || head.textContent === ''
-          if (isText && isEmpty) {
-            break
-          }
-          newLi = document.createElement('li')
-        }
-        newLi.appendChild(head)
-        head = childNodes.shift()
-      }
-      if (newLi) {
-        slots.push(slot)
-        slotParser(slot, newLi)
-        newLi = null
-      }
+      })
     }
+
+    ergodicNode(element, slots, 1)
+
     return listComponent.createInstance(injector, {
       slots,
       state: {
         type: element.tagName.toLowerCase() as any,
-        level: Number(level)
-      }
+        level: Number(level),
+      },
     })
-  }
+  },
 }
