@@ -335,7 +335,11 @@ export const todolistComponent = defineComponent({
                                   borderBottom: '1px solid #e8e8e8'
                                 }}
                               />
-                              <div>
+                              <div style={{
+                                maxHeight: '150px',
+                                overflow: 'scroll',
+                                overflowX: 'hidden'
+                              }}>
                                 {filterUserList.map((option) => {
                                   return (
                                     <div
