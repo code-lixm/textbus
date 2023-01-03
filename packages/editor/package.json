@@ -34,6 +34,7 @@
     "@textbus/browser": "^2.6.2",
     "@textbus/collaborate": "^2.6.2",
     "@textbus/core": "^2.6.2",
+    "dayjs": "^1.11.6",
     "prismjs": "^1.23.0"
   },
   "author": {

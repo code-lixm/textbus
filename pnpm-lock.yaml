@@ -125,7 +125,7 @@ importers:
       '@rollup/plugin-typescript': ^9.0.2
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.9
-      '@textbus/core': ^2.6.1
+      '@textbus/core': ^2.6.2
       reflect-metadata: ^0.1.13
       rimraf: ^3.0.2
       rollup: ^3.2.5
@@ -148,8 +148,8 @@ importers:
       '@rollup/plugin-typescript': ^9.0.2
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.9
-      '@textbus/browser': ^2.6.1
-      '@textbus/core': ^2.6.1
+      '@textbus/browser': ^2.6.2
+      '@textbus/core': ^2.6.2
       reflect-metadata: ^0.1.13
       rimraf: ^3.0.2
       rollup: ^3.2.5
@@ -200,9 +200,10 @@ importers:
       '@tanbo/css-themes': ^0.0.1
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.9
-      '@textbus/browser': ^2.6.1
-      '@textbus/collaborate': ^2.6.1
-      '@textbus/core': ^2.6.1
+      '@textbus/browser': ^2.6.2
+      '@textbus/collaborate': ^2.6.2
+      '@textbus/core': ^2.6.2
+      dayjs: ^1.11.6
       prismjs: ^1.23.0
       rimraf: ^3.0.2
     dependencies:
@@ -215,6 +216,7 @@ importers:
       '@textbus/browser': link:../browser
       '@textbus/collaborate': link:../collaborate
       '@textbus/core': link:../core
+      dayjs: 1.11.6
       prismjs: 1.29.0
     devDependencies:
       rimraf: 3.0.2
@@ -5840,7 +5842,7 @@ packages:
     optional: true
 
   /encoding/0.1.13:
-    resolution: {integrity: sha1-VldK/deR9UqOmyeFwFgqLSYhD6k=}
+    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
     requiresBuild: true
     dependencies:
       iconv-lite: 0.6.3
@@ -6694,7 +6696,7 @@ packages:
     optional: true
 
   /fsevents/2.3.2:
-    resolution: {integrity: sha1-ilJveLj99GI7cJ4Ll1xSwkwC/Ro=}
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -13374,7 +13376,7 @@ packages:
     dev: true
 
   /ws/6.2.2:
-    resolution: {integrity: sha1-3Vzb1XqZeZFgl2UtePHMX66gwy4=}
+    resolution: {integrity: sha512-zmhltoSR8u1cnDsD43TX59mzoMZsLKqUweyYBAIvTngR3shc0W6aOZylZmq/7hqyVxPdi+5Ud2QInblgyE72fw==}
     requiresBuild: true
     peerDependencies:
       bufferutil: ^4.0.1
