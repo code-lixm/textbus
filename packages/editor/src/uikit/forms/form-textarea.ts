@@ -57,7 +57,7 @@ export class FormTextarea implements FormItem<string> {
     }
     this.input.disabled = false
     if (this.btn) {
-      this.btn.classList.remove('textbus-btn-loading')
+      // this.btn.classList.remove('textbus-btn-loading')
       this.btn.children[0].className = 'textbus-icon-upload'
     }
   }

@@ -33,9 +33,9 @@ export class FormTextField implements FormItem<string | string[]> {
     if (config.canUpload) {
       this.btn = this.elementRef.querySelector('button')!
       this.btn.addEventListener('click', () => {
-        this.btn!.classList.add('textbus-btn-loading')
+        // this.btn!.classList.add('textbus-btn-loading')
         this.input.disabled = true
-        this.btn!.children[0].className = 'textbus-icon-loading'
+        // this.btn!.children[0].className = 'textbus-icon-loading'
         if (this.sub) {
           this.sub.unsubscribe()
         }
@@ -86,7 +86,7 @@ export class FormTextField implements FormItem<string | string[]> {
     }
     this.input.disabled = false
     if (this.btn) {
-      this.btn.classList.remove('textbus-btn-loading')
+      // this.btn.classList.remove('textbus-btn-loading')
       this.btn.children[0].className = 'textbus-icon-upload'
     }
   }

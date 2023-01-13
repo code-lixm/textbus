@@ -34,7 +34,7 @@ export const audioComponent = defineComponent({
     return {
       render(): VElement {
         return (
-          <audio src={state!.src} autoplay={state!.autoplay} controls={state!.controls}></audio>
+          <audio data-link={state.src} src={state.src} autoplay={state!.autoplay} controls={state!.controls}></audio>
         )
       },
       toJSON() {

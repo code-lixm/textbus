@@ -48,7 +48,7 @@ export const videoComponent = defineComponent({
     return {
       render(): VElement {
         return (
-          <video src={state.src} ref={ref} autoPlay={state.autoplay} controls={state.controls} style={{
+          <video data-link={state.src} src={state.src} ref={ref} autoPlay={state.autoplay} controls={state.controls} style={{
             width: state.width,
             height: state.height
           }}/>

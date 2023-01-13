@@ -98,12 +98,12 @@ export const attachmentComponent = defineComponent({
         return (
           <span component-name="AttachmentComponent" class="tb-attachment">
             {readonly ? (
-              <a title={state.name} href={state.url} download={state.name}>
+              <a title={state.name} href={state.url} download={state.name} data-link={state.url}>
                 <img src={getFileTypeByName(state.name)} style='max-wdith:20px;' />
                 <span>{state.name}</span>
               </a>
             ) : (
-              <span title={state.name} onClick={showForm}>
+              <span title={state.name} onClick={showForm} data-link={state.url}>
                 <img src={getFileTypeByName(state.name)} style='max-wdith:20px;' />
                 <span>{state.name}</span>
               </span>
@@ -147,7 +147,6 @@ export const attachmentComponentLoader: ComponentLoader = {
     )
   },
   read(element: HTMLElement, context: Injector): ComponentInstance {
-    console.log('%c [ element ]-150', 'font-size:13px; background:#cc2485; color:#ff68c9;', element.dataset)
     return attachmentComponent.createInstance(context, {
       state: {
         url: (element.dataset.url || element.dataset.link) || '',

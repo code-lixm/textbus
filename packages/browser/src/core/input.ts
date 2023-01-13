@@ -176,9 +176,10 @@ export class Input {
       }),
       fromEvent<ClipboardEvent>(textarea, 'paste').subscribe(ev => {
         const text = ev.clipboardData!.getData('Text')
+        const html = ev.clipboardData!.getData('text/html')
 
         const files = Array.from(ev.clipboardData!.files)
-        if (files.length) {
+        if (files.length && (!html || !text)) {
           Promise.all(files.filter(i => {
             return /image/i.test(i.type)
           }).map(item => {
