@@ -282,9 +282,9 @@ export const listComponent = defineComponent({
           >
             {slots.toArray().map((slot) => {
               const state = slot.state
-              const CustomTag = state?.haveChild ? 'div' : 'li'
+              const CustomTag = state?.haveChild && Tag === 'ol' ? 'div' : 'li'
               return slotRender(slot, () => {
-                return <CustomTag />
+                return <CustomTag class={state?.haveChild?'have-child':''}/>
               })
             })}
           </Tag>
@@ -314,6 +314,7 @@ export const listComponentLoader: ComponentLoader = {
     styles: [
       `.tb-list-item {margin-top: 0.5em; margin-bottom: 0.5em}
       .have-child {list-style: none}
+      ul,ol{padding-left:20px}
       `,
     ],
   },
