@@ -1,10 +1,11 @@
-import { FormatPriority, FormatType, InlineFormatter, VElement } from '@textbus/core'
+import { Formatter, FormatValue, VElement, VTextNode } from '@textbus/core'
 
 import { Matcher, MatchRule } from './matcher'
 import { inlineTags } from './_config'
+import { FormatLoader } from '@textbus/platform-browser'
 
-export class InlineTagStyleFormatLoader extends Matcher {
-  constructor(public styleName: string, formatter: InlineFormatter, rule: MatchRule, public forceMatchTags = false) {
+export class InlineTagStyleFormatLoader<T extends FormatValue> extends Matcher<T, Formatter<any>> implements FormatLoader<any> {
+  constructor(public styleName: string, formatter: Formatter<any>, rule: MatchRule, public forceMatchTags = false) {
     super(formatter, rule)
   }
 
@@ -18,9 +19,9 @@ export class InlineTagStyleFormatLoader extends Matcher {
     return super.match(element)
   }
 
-  override read(node: HTMLElement) {
+  read(node: HTMLElement) {
     return {
-      formatter: this.formatter,
+      formatter: this.target,
       value: this.extractFormatData(node, {
         styleName: this.styleName
       }).styles[this.styleName]
@@ -28,28 +29,34 @@ export class InlineTagStyleFormatLoader extends Matcher {
   }
 }
 
-export class InlineTagStyleFormatter implements InlineFormatter {
-  type: FormatType.Inline = FormatType.Inline
-  priority = FormatPriority.Attribute
+export class InlineTagStyleFormatter implements Formatter<any> {
+  columned = false
 
   constructor(public name: string,
               public styleName: string) {
   }
 
-  render(node: VElement | null, formatValue: string): VElement | void {
-    const reg = new RegExp(`^(${inlineTags.join('|')})$`, 'i')
-    if (node && reg.test(node.tagName)) {
-      node.styles.set(this.styleName, formatValue)
-      return
+  render(children: Array<VElement | VTextNode>, formatValue: string): VElement {
+    if (children.length === 1 && children[0] instanceof VElement) {
+      const node = children[0]
+      if (node instanceof VElement) {
+        const reg = new RegExp(`^(${inlineTags.join('|')})$`, 'i')
+        if (node && reg.test(node.tagName)) {
+          node.styles.set(this.styleName, formatValue)
+          return node
+        }
+      }
     }
-    node = new VElement('span')
-    node.styles.set(this.styleName, formatValue)
-    return node
+    return new VElement('span', {
+      style: {
+        [this.styleName]: formatValue
+      }
+    }, children)
   }
 }
 
 export class InlineTagLeafStyleFormatter extends InlineTagStyleFormatter {
-  columned = true
+  override columned = true
 }
 
 // 强制行内样式

@@ -1,41 +1,40 @@
-import { FormatPriority, FormatType, InlineFormatter, VElement } from '@textbus/core'
+import { VElement, VTextNode, FormatValue, Formatter } from '@textbus/core'
 
 import { Matcher, MatchRule } from './matcher'
+import { FormatLoader } from '@textbus/platform-browser'
 
-export class InlineTagFormatLoader extends Matcher {
+export class InlineTagFormatLoader<T extends FormatValue> extends Matcher<T, Formatter<T>> implements FormatLoader<T> {
   constructor(formatter: InlineElementFormatter, rule: MatchRule) {
     super(formatter, rule)
   }
 
-  override read() {
+  read() {
     return {
-      formatter: this.formatter,
-      value: true
+      formatter: this.target,
+      value: true as T
     }
   }
 }
 
-export class InlineElementFormatter implements InlineFormatter {
-  type: FormatType.Inline = FormatType.Inline
-  priority = FormatPriority.Tag
-
+export class InlineElementFormatter implements Formatter<boolean> {
   constructor(public name: string,
-              public tagName: string) {
+              public tagName: string,
+              public columned: boolean) {
   }
 
-  render() {
-    return new VElement(this.tagName)
+  render(children: Array<VElement | VTextNode>) {
+    return new VElement(this.tagName, null, children)
   }
 }
 
 // 行内标签
-export const boldFormatter = new InlineElementFormatter('bold', 'strong')
-export const italicFormatter = new InlineElementFormatter('italic', 'em')
-export const strikeThroughFormatter = new InlineElementFormatter('strikeThrough', 'del')
-export const underlineFormatter = new InlineElementFormatter('underline', 'u')
-export const subscriptFormatter = new InlineElementFormatter('subscript', 'sub')
-export const superscriptFormatter = new InlineElementFormatter('superscript', 'sup')
-export const codeFormatter = new InlineElementFormatter('code', 'code')
+export const boldFormatter = new InlineElementFormatter('bold', 'strong', false)
+export const italicFormatter = new InlineElementFormatter('italic', 'em', false)
+export const strikeThroughFormatter = new InlineElementFormatter('strikeThrough', 'del', true)
+export const underlineFormatter = new InlineElementFormatter('underline', 'u', true)
+export const subscriptFormatter = new InlineElementFormatter('subscript', 'sub', false)
+export const superscriptFormatter = new InlineElementFormatter('superscript', 'sup', false)
+export const codeFormatter = new InlineElementFormatter('code', 'code', false)
 export const boldFormatLoader = new InlineTagFormatLoader(boldFormatter, {
   tags: ['strong', 'b'],
   styles: {

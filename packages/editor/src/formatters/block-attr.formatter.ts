@@ -1,11 +1,12 @@
-import { BlockFormatter, FormatPriority, FormatType, FormatValue, VElement } from '@textbus/core'
+import { Attribute, FormatValue, VElement } from '@textbus/core'
 
 import { Matcher, MatchRule } from './matcher'
 import { blockTags } from './_config'
+import { AttributeLoader } from '@textbus/platform-browser'
 
-export class BlockAttrFormatLoader extends Matcher {
-  constructor(public attrName: string, formatter: BlockFormatter, rule: MatchRule) {
-    super(formatter, rule)
+export class BlockAttrLoader<T extends FormatValue> extends Matcher<T, Attribute<T>> implements AttributeLoader<any> {
+  constructor(public attrName: string, attribute: Attribute<T>, rule: MatchRule) {
+    super(attribute, rule)
   }
 
   override match(p: HTMLElement) {
@@ -16,37 +17,29 @@ export class BlockAttrFormatLoader extends Matcher {
     return super.match(p)
   }
 
-  override read(node: HTMLElement) {
+  read(node: HTMLElement) {
     return {
-      formatter: this.formatter,
+      attribute: this.target,
       value: this.extractFormatData(node, {
         attrs: [this.attrName]
-      }).attrs?.[this.attrName] as FormatValue
+      }).attrs?.[this.attrName] as T
     }
   }
 }
 
-export class BlockAttrFormatter implements BlockFormatter {
-  type: FormatType.Block = FormatType.Block
-  priority = FormatPriority.Attribute
+export class BlockAttrFormatter implements Attribute<string> {
   constructor(public name: string, public attrName: string) {
   }
 
-  render(node: VElement | null, formatValue: FormatValue): VElement | void {
-    if (node) {
-      node.attrs.set(this.attrName, formatValue)
-      return node
-    }
-    return new VElement('div', {
-      [this.attrName]: formatValue
-    })
+  render(host: VElement, formatValue: FormatValue) {
+    host.attrs.set(this.attrName, formatValue)
   }
 }
 
 export const dirFormatter = new BlockAttrFormatter('dir', 'dir')
 
 // 块级属性
-export const dirFormatLoader = new BlockAttrFormatLoader('dir', dirFormatter, {
+export const dirFormatLoader = new BlockAttrLoader('dir', dirFormatter, {
   attrs: [{
     key: 'dir',
     value: ['ltr', 'rtl']

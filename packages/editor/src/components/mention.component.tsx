@@ -19,7 +19,7 @@ import {
   useState,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
+import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { EditorOptions } from '../types'
 export interface MentionComponentOption {
@@ -163,7 +163,7 @@ export const mentionComponent = defineComponent({
     }
 
     return {
-      render(_, slotRender: SlotRender): VElement {
+      render(slotRender: SlotRender): VElement {
         let classes = ''
         if (state.isSelected) {
           classes = state.username === currentUserInfo.name ? 'mention-selected-self' : 'mention-selected'

@@ -1,10 +1,11 @@
-import { BlockFormatter, FormatPriority, FormatType, VElement } from '@textbus/core'
+import { VElement, Attribute, FormatValue } from '@textbus/core'
 
 import { Matcher, MatchRule } from './matcher'
 import { blockTags } from './_config'
+import { AttributeLoader } from '@textbus/platform-browser'
 
-export class BlockStyleFormatLoader extends Matcher {
-  constructor(public styleName: string, formatter: BlockFormatter, rule: MatchRule) {
+export class BlockStyleFormatLoader<T extends FormatValue> extends Matcher<T, Attribute<T>> implements AttributeLoader<T> {
+  constructor(public styleName: string, formatter: Attribute<any>, rule: MatchRule) {
     super(formatter, rule)
   }
 
@@ -16,31 +17,23 @@ export class BlockStyleFormatLoader extends Matcher {
     return super.match(p)
   }
 
-  override read(node: HTMLElement) {
+  read(node: HTMLElement) {
     return {
-      formatter: this.formatter,
+      attribute: this.target,
       value: this.extractFormatData(node, {
         styleName: this.styleName
-      }).styles[this.styleName]
+      }).styles[this.styleName] as T
     }
   }
 }
 
-export class BlockStyleFormatter implements BlockFormatter {
-  type: FormatType.Block = FormatType.Block
-  priority = FormatPriority.Attribute
+export class BlockStyleFormatter implements Attribute<string> {
   constructor(public name: string,
               public styleName: string) {
   }
 
-  render(node: VElement | null, formatValue: string): VElement | void {
-    if (node) {
-      node.styles.set(this.styleName, formatValue)
-    } else {
-      const el = new VElement('div')
-      el.styles.set(this.styleName, formatValue)
-      return el
-    }
+  render(host: VElement, formatValue: string) {
+    host.styles.set(this.styleName, formatValue)
   }
 }
 

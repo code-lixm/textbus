@@ -1,15 +1,21 @@
 import { Injectable } from '@tanbo/di'
 
 import {
-  VElement,
-  VTextNode,
+  ComponentInstance,
+  FormatHostBindingRender,
   FormatItem,
   FormatTree,
-  ComponentInstance,
+  jsx,
+  RenderMode,
   Slot,
+  SlotRenderFactory,
+  VElement,
+  VTextNode,
 } from '../model/_api'
-import { formatSort } from './renderer'
 import { RootComponentRef } from './_injection-tokens'
+// import { makeError } from '../_utils/make-error'
+
+// const outputRendererErrorFn = makeError('OutputRenderer')
 
 /**
  * Textbus 输出渲染器
@@ -20,7 +26,7 @@ export class OutputRenderer {
 
   private slotVNodeCaches = new WeakMap<Slot, VElement>()
 
-  private slotRenderFactory = new WeakMap<Slot, () => VElement>()
+  private slotRenderFactory = new WeakMap<Slot, SlotRenderFactory>()
 
   constructor(private rootComponentRef: RootComponentRef) {
   }
@@ -36,9 +42,9 @@ export class OutputRenderer {
 
   private componentRender(component: ComponentInstance): VElement {
     if (component.changeMarker.outputDirty) {
-      const node = component.extends.render(true, (slot, factory) => {
+      const node = component.extends.render((slot, factory) => {
         return this.slotRender(slot, factory)
-      })
+      }, RenderMode.Output)
       component.changeMarker.outputRendered()
       this.componentVNode.set(component, node)
       return node
@@ -64,20 +70,21 @@ export class OutputRenderer {
     return this.componentVNode.get(component)!
   }
 
-  private slotRender(slot: Slot, slotRenderFactory: () => VElement): VElement {
+  private slotRender(slot: Slot, slotRenderFactory: SlotRenderFactory): VElement {
     if (slot.changeMarker.outputDirty) {
       this.slotRenderFactory.set(slot, slotRenderFactory)
-      const root = slotRenderFactory()
-      let host = root
       const formatTree = slot.createFormatTree()
+
+      let children = formatTree.children ?
+        this.createVDomByFormatTree(slot, formatTree.children) :
+        this.createVDomByContent(slot, formatTree.startIndex, formatTree.endIndex)
+
       if (formatTree.formats) {
-        host = this.createVDomByOverlapFormats(formatSort(formatTree.formats), root, slot)
+        children = [this.createVDomByOverlapFormats(formatTree.formats, children)]
       }
-      if (formatTree.children) {
-        const children = this.createVDomByFormatTree(slot, formatTree.children)
-        host.appendChild(...children)
-      } else {
-        host.appendChild(...this.createVDomByContent(slot, formatTree.startIndex, formatTree.endIndex))
+      const root = slotRenderFactory(children)
+      for (const [attribute, value] of slot.getAttributes()) {
+        attribute.render(root, value, RenderMode.Output)
       }
       slot.changeMarker.outputRendered()
       this.slotVNodeCaches.set(slot, root)
@@ -100,63 +107,55 @@ export class OutputRenderer {
     return this.slotVNodeCaches.get(slot)!
   }
 
-  private createVDomByFormatTree(slot: Slot, formats: FormatTree[]) {
-    const children: Array<VElement | VTextNode> = []
-    formats.forEach(child => {
-      if (child.formats) {
-        const elements: VElement[] = []
-        const formats = formatSort(child.formats)
-        let host: VElement = null as any
-        formats.forEach(item => {
-          const node = item.formatter.render(host, item.value, true)
-          if (node && host !== node) {
-            elements.push(node)
-            host = node
-          }
-        })
+  private createVDomByFormatTree(slot: Slot, formats: FormatTree<any>[]) {
+    const nodes: Array<VElement | VTextNode> = []
+    for (const child of formats) {
+      if (child.formats?.length) {
+        const children = child.children ?
+          this.createVDomByFormatTree(slot, child.children) :
+          this.createVDomByContent(slot, child.startIndex, child.endIndex)
 
-        const node = elements.shift()
-        let parent = node!
-        if (node) {
-          while (elements.length) {
-            const c = elements.shift()!
-            parent.appendChild(c)
-            parent = c
-          }
-          children.push(node)
-          if (child.children) {
-            const c = this.createVDomByFormatTree(slot, child.children)
-            host.appendChild(...c)
-          } else {
-            host.appendChild(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
-          }
-        } else {
-          children.push(...this.createVDomByFormatTree(slot, child.children || []))
-        }
+        const nextChildren = this.createVDomByOverlapFormats(
+          child.formats,
+          children
+        )
+        nodes.push(nextChildren)
       } else {
-        children.push(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
+        nodes.push(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
       }
-    })
-    return children
+    }
+    return nodes
   }
 
-  private createVDomByOverlapFormats(formats: FormatItem[], host: VElement, slot: Slot): VElement {
-    const item = formats.shift()
-    if (item) {
-      const next = item.formatter.render(host, item.value, true)
-      if (next && next !== host) {
-        host.appendChild(next)
-        host = next
+  private createVDomByOverlapFormats(
+    formats: (FormatItem<any>)[],
+    children: Array<VElement | VTextNode>): VElement {
+    const hostBindings: Array<FormatHostBindingRender> = []
+    let host: VElement | null = null
+    for (let i = formats.length - 1; i > -1; i--) {
+      const item = formats[i]
+      const next = item.formatter.render(children, item.value, RenderMode.Output)
+      if (!(next instanceof VElement)) {
+        hostBindings.push(next)
+        continue
       }
-      return this.createVDomByOverlapFormats(formats, host, slot)
+      host = next
+      children = [next]
     }
-    return host
+    for (const binding of hostBindings) {
+      if (!host) {
+        host = jsx(binding.fallbackTagName)
+        host.appendChild(...children)
+      }
+      binding.attach(host)
+    }
+    return host!
   }
 
   private createVDomByContent(slot: Slot, startIndex: number, endIndex: number): Array<VTextNode | VElement> {
     const elements: Array<string | ComponentInstance> = slot.sliceContent(startIndex, endIndex).map(i => {
       if (typeof i === 'string') {
-        return i.match(/[\n]|[^\n]+/g)!
+        return i.match(/\n|[^\n]+/g)!
       }
       return i
     }).flat()

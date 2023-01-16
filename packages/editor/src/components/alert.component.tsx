@@ -8,7 +8,7 @@ import {
   useState,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { I18n } from '../i18n'
 
@@ -77,7 +77,7 @@ export const alertComponent = defineComponent({
     })
 
     return {
-      render(_, slotRender): VElement {
+      render(slotRender): VElement {
         const classes = ['tb-alert']
         if (state.fill) {
           classes.push('tb-alert-fill')
@@ -88,8 +88,8 @@ export const alertComponent = defineComponent({
         return (
           <div component-name='AlertComponent' data-type={state.type} class={classes.join(' ')}>
             {
-              slotRender(slots.get(0)!, () => {
-                return <div />
+              slotRender(slots.get(0)!, children => {
+                return <div>{children}</div>
               })
             }
           </div>

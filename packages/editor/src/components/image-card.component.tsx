@@ -14,7 +14,7 @@ import {
   useState,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { Dialog } from '../dialog'
 import { Form, FormTextField } from '../uikit/forms/_api'
@@ -117,7 +117,7 @@ export const imageCardComponent = defineComponent({
     }
 
     return {
-      render(_, slotRender): VElement {
+      render(slotRender): VElement {
         return (
           <div component-name='ImageCardComponent' class='tb-image-card' data-src={state.src} data-height={state.height}>
             <div onClick={showForm}>
@@ -126,8 +126,8 @@ export const imageCardComponent = defineComponent({
               }}/>
             </div>
             {
-              slotRender(slots.get(0)!, () => {
-                return <p/>
+              slotRender(slots.get(0)!, children => {
+                return <p>{children}</p>
               })
             }
           </div>

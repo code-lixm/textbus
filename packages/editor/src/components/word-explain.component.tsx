@@ -4,7 +4,7 @@ import {
   ContentType,
   defineComponent, onContextMenu,
   onDestroy,
-  onSlotRemove,
+  onSlotRemove, RenderMode,
   Slot,
   SlotRender,
   useContext,
@@ -13,7 +13,7 @@ import {
   useState,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { I18n } from '../i18n'
 import { Form, FormTextField } from '../uikit/forms/_api'
@@ -98,22 +98,22 @@ export const wordExplainComponent = defineComponent({
     })
 
     return {
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
+      render(slotRenderFn: SlotRender, renderMode): VElement {
         return (
           <div component-name='WordExplainComponent' class='tb-word-explain'>
             <div class="tb-word-explain-title-group" style={{ width: state.width }}>
-              {slotRender(slots.get(0)!, () => {
-                return <div class="tb-word-explain-title" />
+              {slotRenderFn(slots.get(0)!, children => {
+                return <div class="tb-word-explain-title">{children}</div>
               })}
-              {slotRender(slots.get(1)!, () => {
-                return <div class="tb-word-explain-subtitle" />
+              {slotRenderFn(slots.get(1)!, children => {
+                return <div class="tb-word-explain-subtitle">{children}</div>
               })}
             </div>
-            {slotRender(slots.get(2)!, () => {
-              return <div class="tb-word-explain-detail" />
+            {slotRenderFn(slots.get(2)!, children => {
+              return <div class="tb-word-explain-detail">{children}</div>
             })}
             {
-              !isOutputMode && <span class="tb-word-explain-close" onClick={() => {
+              renderMode === RenderMode.Editing && <span class="tb-word-explain-close" onClick={() => {
                 commander.removeComponent(self)
               }
               } />

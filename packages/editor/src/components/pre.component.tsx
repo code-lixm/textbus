@@ -4,8 +4,7 @@ import {
   ComponentInstance,
   ContentType,
   defineComponent,
-  FormatPriority, FormatType,
-  InlineFormatter,
+  Formatter,
   onBreak,
   onContextMenu,
   onPaste,
@@ -18,8 +17,9 @@ import {
   useSlots,
   useState,
   VElement,
+  VTextNode,
 } from '@textbus/core'
-import { ComponentLoader } from '@textbus/browser'
+import { ComponentLoader } from '@textbus/platform-browser'
 import { Grammar, languages, Token, tokenize } from 'prismjs'
 import 'prismjs/components/prism-typescript'
 import 'prismjs/components/prism-java'
@@ -117,15 +117,14 @@ export interface PreComponentState {
   theme?: string
 }
 
-export class CodeStyleFormatter implements InlineFormatter {
-  type: FormatType.Inline = FormatType.Inline
-  priority = FormatPriority.Attribute
+export class CodeStyleFormatter implements Formatter<string> {
   name = 'code' + Math.random()
+  columned = false
 
-  render(node: VElement | null, formatValue: string) {
+  render(children: Array<VElement | VTextNode>, formatValue: string) {
     return new VElement('span', {
       class: 'tb-hl-' + formatValue
-    })
+    }, children)
   }
 }
 
@@ -653,7 +652,7 @@ export const preComponent = defineComponent({
     })
 
     return {
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
+      render(slotRender: SlotRender): VElement {
         let lang = ''
         languageList.forEach(i => {
           if (i.value === data.state!.lang) {
@@ -669,8 +668,9 @@ export const preComponent = defineComponent({
             <div class={'tb-code-content' + (blockHighlight ? ' tb-color-content-highlight' : '')}>
               {
                 slots.toArray().map(item => {
-                  return slotRender(item, () => {
-                    return <div class={(item.state?.emphasize ? 'tb-code-line-emphasize ' : '') + 'tb-code-line'}/>
+                  return slotRender(item, children => {
+                    return <div
+                      class={(item.state?.emphasize ? 'tb-code-line-emphasize ' : '') + 'tb-code-line'}>{children}</div>
                   })
                 })
               }

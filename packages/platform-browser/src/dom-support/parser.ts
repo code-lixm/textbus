@@ -1,7 +1,9 @@
 import { Inject, Injectable, Injector } from '@tanbo/di'
 import {
+  Attribute,
   ComponentInstance,
-  FormatItem, Formatter,
+  FormatItem,
+  Formatter,
   FormatValue,
   Slot
 } from '@textbus/core'
@@ -17,7 +19,7 @@ export interface ComponentResources {
 }
 
 export interface SlotParser {
-  <T extends Slot>(childSlot: T, childElement: HTMLElement): T
+  <T extends Slot>(childSlot: T, slotRootElement: HTMLElement, slotContentHostElement?: HTMLElement): T
 }
 
 /**
@@ -34,17 +36,27 @@ export interface ComponentLoader {
   read(element: HTMLElement, context: Injector, slotParser: SlotParser): ComponentInstance | Slot
 }
 
-export interface FormatLoaderReadResult {
-  formatter: Formatter
-  value: FormatValue
+export interface FormatLoaderReadResult<T extends FormatValue> {
+  formatter: Formatter<T>
+  value: T
 }
 
-export interface FormatLoader {
+export interface FormatLoader<T extends FormatValue> {
   match(element: HTMLElement): boolean
 
-  read(element: HTMLElement): FormatLoaderReadResult
+  read(element: HTMLElement): FormatLoaderReadResult<T>
 }
 
+export interface AttributeLoaderReadResult<T extends FormatValue> {
+  attribute: Attribute<T>
+  value: T
+}
+
+export interface AttributeLoader<T extends FormatValue> {
+  match(element: HTMLElement): boolean
+
+  read(element: HTMLElement): AttributeLoaderReadResult<T>
+}
 
 @Injectable()
 export class Parser {
@@ -53,7 +65,8 @@ export class Parser {
   }
 
   componentLoaders: ComponentLoader[]
-  formatLoaders: FormatLoader[]
+  formatLoaders: FormatLoader<any>[]
+  attributeLoaders: AttributeLoader<any>[]
 
   constructor(@Inject(EDITOR_OPTIONS) private options: ViewOptions,
               private injector: Injector) {
@@ -63,19 +76,27 @@ export class Parser {
     const formatLoaders = [
       ...(options.formatLoaders || [])
     ]
+    const attributeLoaders = [
+      ...(options.attributeLoaders || [])
+    ]
     options.imports?.forEach(i => {
       componentLoaders.push(...(i.componentLoaders || []))
       formatLoaders.push(...(i.formatLoaders || []))
     })
     this.componentLoaders = componentLoaders
     this.formatLoaders = formatLoaders
+    this.attributeLoaders = attributeLoaders
   }
 
   parseDoc(html: string, rootComponentLoader: ComponentLoader) {
     const element = Parser.parseHTML(html)
-    return rootComponentLoader.read(element, this.injector, (childSlot, childElement) => {
-      return this.readSlot(childSlot, childElement)
-    })
+    return rootComponentLoader.read(
+      element,
+      this.injector,
+      (childSlot, slotRootElement, slotContentHostElement = slotRootElement) => {
+        return this.readSlot(childSlot, slotRootElement, slotContentHostElement)
+      }
+    )
   }
 
   parse(html: string, rootSlot: Slot) {
@@ -91,9 +112,13 @@ export class Parser {
       }
       for (const t of this.componentLoaders) {
         if (t.match(el as HTMLElement)) {
-          const result = t.read(el as HTMLElement, this.injector, (childSlot, childElement) => {
-            return this.readSlot(childSlot, childElement)
-          })
+          const result = t.read(
+            el as HTMLElement,
+            this.injector,
+            (childSlot, slotRootElement, slotContentHostElement = slotRootElement) => {
+              return this.readSlot(childSlot, slotRootElement, slotContentHostElement)
+            }
+          )
           if (result instanceof Slot) {
             result.toDelta().forEach(i => slot.insert(i.insert, i.formats))
             return
@@ -123,7 +148,7 @@ export class Parser {
       this.readComponent(child, slot)
     })
     const endIndex = slot.index
-    this.applyFormats(slot, formats.map<FormatItem>(i => {
+    this.applyFormats(slot, formats.map<FormatItem<any>>(i => {
       return {
         formatter: i.formatter,
         value: i.value,
@@ -135,12 +160,18 @@ export class Parser {
     return slot
   }
 
-  private readSlot<T extends Slot>(childSlot: T, childElement: HTMLElement): T {
-    this.readFormats(childElement, childSlot)
+  private readSlot<T extends Slot>(childSlot: T, slotRootElement: HTMLElement, slotContentElement: HTMLElement): T {
+    this.attributeLoaders.filter(a => {
+      return a.match(slotRootElement)
+    }).forEach(a => {
+      const r = a.read(slotRootElement)
+      childSlot.setAttribute(r.attribute, r.value)
+    })
+    this.readFormats(slotContentElement, childSlot)
     return childSlot
   }
 
-  private applyFormats(slot: Slot, formatItems: FormatItem[]) {
+  private applyFormats(slot: Slot, formatItems: FormatItem<any>[]) {
     slot.background(() => {
       formatItems.forEach(i => {
         slot.retain(i.startIndex)

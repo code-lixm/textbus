@@ -5,7 +5,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "lib": ["esnext", "dom"],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
     "target": "es6",
     "strict": true,
     "module": "es2020",
@@ -15,6 +18,7 @@
     "noImplicitAny": false,
     "suppressImplicitAnyIndexErrors": true,
     "outDir": "bundles/",
+    "skipLibCheck": true,
     "downlevelIteration": true,
     "jsx": "react",
     "jsxFactory": "VElement.createElement"

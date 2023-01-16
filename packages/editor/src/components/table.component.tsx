@@ -1,5 +1,5 @@
 import { Injectable, Injector } from '@tanbo/di'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser, CollaborateSelectionAwarenessDelegate } from '@textbus/platform-browser'
 import {
   Commander,
   ComponentInitData,
@@ -34,7 +34,6 @@ import {
   TableSlotState,
   useTableMultipleRange,
 } from './hooks/table-multiple-range'
-import { CollaborateSelectionAwarenessDelegate } from '@textbus/collaborate'
 
 export { createCell }
 
@@ -564,7 +563,7 @@ export const tableComponent = defineComponent({
 
         tableCells = slotsToTable(slots.toArray(), tableInfo.columnCount)
       },
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
+      render(slotRender: SlotRender): VElement {
         tableCells = slotsToTable(slots.toArray(), tableInfo.columnCount)
         return (
           <table
@@ -579,12 +578,9 @@ export const tableComponent = defineComponent({
                 return (
                   <tr>
                     {row.map((col) => {
-                      return slotRender(col, () => {
+                      return slotRender(col, (children) => {
                         return (
-                          <td
-                            colSpan={col.state?.colspan}
-                            rowSpan={col.state?.rowspan}
-                          />
+                          <td colSpan={col.state?.colspan} rowSpan={col.state?.rowspan}>{children}</td>
                         )
                       })
                     })}

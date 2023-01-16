@@ -1,17 +1,18 @@
-import { FormatPriority, FormatType, InlineFormatter, VElement } from '@textbus/core'
+import { Formatter, FormatValue, RenderMode, VElement, VTextNode } from '@textbus/core'
+import { FormatLoader } from '@textbus/platform-browser'
 
 import { Matcher } from './matcher'
 
-export class LinkFormatLoader extends Matcher {
-  constructor(formatter: LinkFormatter) {
+export class LinkFormatLoader<T extends FormatValue> extends Matcher<T, Formatter<any>> implements FormatLoader<any> {
+  constructor(formatter: Formatter<any>) {
     super(formatter, {
       tags: ['a']
     })
   }
 
-  override read(element: HTMLElement) {
+  read(element: HTMLElement) {
     return {
-      formatter: this.formatter,
+      formatter: this.target,
       value: this.extractFormatData(element, {
         attrs: ['target', 'href', 'data-href']
       }).attrs as Record<string, string>
@@ -19,22 +20,22 @@ export class LinkFormatLoader extends Matcher {
   }
 }
 
-export class LinkFormatter implements InlineFormatter {
-  type: FormatType.Inline = FormatType.Inline
-  priority = FormatPriority.Tag
+export class LinkFormatter implements Formatter<any> {
   name = 'link'
 
-  render(node: VElement | null, formatValue: Record<string, string>, isOutputMode: boolean): VElement | void {
-    if (isOutputMode) {
+  columned = false
+
+  render(children: Array<VElement | VTextNode>, formatValue: Record<string, string>, renderMode: RenderMode): VElement {
+    if (renderMode !== RenderMode.Editing) {
       return new VElement('a', {
         target: formatValue.target,
         href: formatValue.href || formatValue['data-href']
-      })
+      }, children)
     }
     return new VElement('a', {
       target: formatValue.target,
       'data-href': formatValue.href || formatValue['data-href']
-    })
+    }, children)
   }
 }
 

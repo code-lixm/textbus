@@ -1,5 +1,4 @@
 import { Injector } from '@tanbo/di'
-import { EDITOR_OPTIONS } from '@textbus/browser'
 import {
   Commander,
   ContentType,
@@ -7,6 +6,7 @@ import {
   Selection,
   Plugin,
 } from '@textbus/core'
+import { EDITOR_OPTIONS } from '@textbus/platform-browser'
 import { mentionComponent } from '../components/_api'
 import { EditorOptions } from '../types'
 

@@ -119,37 +119,13 @@ importers:
       webpack-cli: 4.10.0_vnmgq7jx5zjkzolvtfp7mdf5ri
       webpack-dev-server: 4.11.1_5v66e2inugklgvlh4huuavolfq
 
-  packages/browser:
-    specifiers:
-      '@rollup/plugin-commonjs': ^23.0.2
-      '@rollup/plugin-typescript': ^9.0.2
-      '@tanbo/di': ^1.1.4
-      '@tanbo/stream': ^1.1.9
-      '@textbus/core': ^2.6.2
-      reflect-metadata: ^0.1.13
-      rimraf: ^3.0.2
-      rollup: ^3.2.5
-      tslib: ^2.4.1
-    dependencies:
-      '@tanbo/di': 1.1.4
-      '@tanbo/stream': 1.1.9
-      '@textbus/core': link:../core
-      reflect-metadata: 0.1.13
-    devDependencies:
-      '@rollup/plugin-commonjs': 23.0.2_rollup@3.2.5
-      '@rollup/plugin-typescript': 9.0.2_rollup@3.2.5+tslib@2.4.1
-      rimraf: 3.0.2
-      rollup: 3.2.5
-      tslib: 2.4.1
-
   packages/collaborate:
     specifiers:
       '@rollup/plugin-commonjs': ^23.0.2
       '@rollup/plugin-typescript': ^9.0.2
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.9
-      '@textbus/browser': ^2.6.2
-      '@textbus/core': ^2.6.2
+      '@textbus/core': ^3.0.0-alpha.63
       reflect-metadata: ^0.1.13
       rimraf: ^3.0.2
       rollup: ^3.2.5
@@ -159,7 +135,6 @@ importers:
     dependencies:
       '@tanbo/di': 1.1.4
       '@tanbo/stream': 1.1.9
-      '@textbus/browser': link:../browser
       '@textbus/core': link:../core
       reflect-metadata: 0.1.13
       y-protocols: 1.0.5
@@ -200,9 +175,9 @@ importers:
       '@tanbo/css-themes': ^0.0.1
       '@tanbo/di': ^1.1.4
       '@tanbo/stream': ^1.1.9
-      '@textbus/browser': ^2.6.2
-      '@textbus/collaborate': ^2.6.2
-      '@textbus/core': ^2.6.2
+      '@textbus/collaborate': ^3.0.0-alpha.63
+      '@textbus/core': ^3.0.0-alpha.63
+      '@textbus/platform-browser': ^3.0.0-alpha.63
       dayjs: ^1.11.6
       prismjs: ^1.23.0
       rimraf: ^3.0.2
@@ -213,13 +188,63 @@ importers:
       '@tanbo/css-themes': 0.0.1
       '@tanbo/di': 1.1.4
       '@tanbo/stream': 1.1.9
-      '@textbus/browser': link:../browser
       '@textbus/collaborate': link:../collaborate
       '@textbus/core': link:../core
+      '@textbus/platform-browser': link:../platform-browser
       dayjs: 1.11.6
       prismjs: 1.29.0
     devDependencies:
       rimraf: 3.0.2
+
+  packages/platform-browser:
+    specifiers:
+      '@rollup/plugin-commonjs': ^23.0.2
+      '@rollup/plugin-typescript': ^9.0.2
+      '@tanbo/di': ^1.1.4
+      '@tanbo/stream': ^1.1.9
+      '@textbus/core': ^3.0.0-alpha.63
+      reflect-metadata: ^0.1.13
+      rimraf: ^3.0.2
+      rollup: ^3.2.5
+      tslib: ^2.4.1
+    dependencies:
+      '@tanbo/di': 1.1.4
+      '@tanbo/stream': 1.1.9
+      '@textbus/core': link:../core
+      reflect-metadata: 0.1.13
+    devDependencies:
+      '@rollup/plugin-commonjs': 23.0.2_rollup@3.2.5
+      '@rollup/plugin-typescript': 9.0.2_rollup@3.2.5+tslib@2.4.1
+      rimraf: 3.0.2
+      rollup: 3.2.5
+      tslib: 2.4.1
+
+  packages/platform-node:
+    specifiers:
+      '@rollup/plugin-commonjs': ^23.0.2
+      '@rollup/plugin-typescript': ^9.0.2
+      '@tanbo/di': ^1.1.3
+      '@tanbo/stream': ^1.1.8
+      '@textbus/core': ^3.0.0-alpha.63
+      reflect-metadata: ^0.1.13
+      rimraf: ^3.0.2
+      rollup: ^3.2.5
+      tslib: ^2.4.1
+      y-protocols: ^1.0.5
+      yjs: ^13.5.39
+    dependencies:
+      '@tanbo/di': 1.1.4
+      '@tanbo/stream': 1.1.9
+      '@textbus/core': link:../core
+      reflect-metadata: 0.1.13
+      y-protocols: 1.0.5
+      yjs: 13.5.42
+    devDependencies:
+      '@rollup/plugin-commonjs': 23.0.2_rollup@3.2.5
+      '@rollup/plugin-typescript': 9.0.2_rollup@3.2.5+tslib@2.4.1
+      rimraf: 3.0.2
+      rollup: 3.2.5
+      tslib: 2.4.1
 
 packages:
 
@@ -4488,7 +4513,7 @@ packages:
     dev: true
 
   /balanced-match/1.0.2:
-    resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+    resolution: {integrity: sha1-6D46fj8wCzTLnYf2FfoMvzV2kO4=}
     dev: true
 
   /base/0.11.2:
@@ -4585,7 +4610,7 @@ packages:
     dev: true
 
   /brace-expansion/2.0.1:
-    resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
+    resolution: {integrity: sha1-HtxFng8MVISG7Pn8mfIiE2S5oK4=}
     dependencies:
       balanced-match: 1.0.2
     dev: true
@@ -5138,7 +5163,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
     dev: true
 
   /concat-stream/1.6.2:
@@ -5842,7 +5867,7 @@ packages:
     optional: true
 
   /encoding/0.1.13:
-    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
+    resolution: {integrity: sha1-VldK/deR9UqOmyeFwFgqLSYhD6k=}
     requiresBuild: true
     dependencies:
       iconv-lite: 0.6.3
@@ -6680,7 +6705,7 @@ packages:
     dev: true
 
   /fs.realpath/1.0.0:
-    resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
+    resolution: {integrity: sha1-FQStJSMVjKpA20onh8sBQRmU6k8=}
     dev: true
 
   /fsevents/1.2.13:
@@ -6696,7 +6721,7 @@ packages:
     optional: true
 
   /fsevents/2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    resolution: {integrity: sha1-ilJveLj99GI7cJ4Ll1xSwkwC/Ro=}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -7450,14 +7475,14 @@ packages:
     dev: true
 
   /inflight/1.0.6:
-    resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    resolution: {integrity: sha1-Sb1jMdfQLQwJvJEKEHW6gWW1bfk=}
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
     dev: true
 
   /inherits/2.0.3:
-    resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
+    resolution: {integrity: sha1-Yzwsg+PaQqUC9SRmAiSA9CCCYd4=}
     dev: true
 
   /inherits/2.0.4:
@@ -9941,7 +9966,7 @@ packages:
     dev: true
 
   /once/1.4.0:
-    resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
+    resolution: {integrity: sha1-WDsap3WWHUsROsF9nFC6753Xa9E=}
     dependencies:
       wrappy: 1.0.2
     dev: true
@@ -10280,7 +10305,7 @@ packages:
     dev: true
 
   /path-is-absolute/1.0.1:
-    resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
+    resolution: {integrity: sha1-F0uSaHNVNP+8es5r9TpanhtcX18=}
     engines: {node: '>=0.10.0'}
     dev: true
 
@@ -12593,7 +12618,7 @@ packages:
     dev: true
 
   /tslib/1.14.1:
-    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
+    resolution: {integrity: sha1-zy04vcNKE0vK8QkcQfZhni9nLQA=}
     dev: true
 
   /tslib/2.4.1:
@@ -13322,7 +13347,7 @@ packages:
     dev: true
 
   /wrappy/1.0.2:
-    resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+    resolution: {integrity: sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=}
     dev: true
 
   /write-file-atomic/2.4.3:
@@ -13376,7 +13401,7 @@ packages:
     dev: true
 
   /ws/6.2.2:
-    resolution: {integrity: sha512-zmhltoSR8u1cnDsD43TX59mzoMZsLKqUweyYBAIvTngR3shc0W6aOZylZmq/7hqyVxPdi+5Ud2QInblgyE72fw==}
+    resolution: {integrity: sha1-3Vzb1XqZeZFgl2UtePHMX66gwy4=}
     requiresBuild: true
     peerDependencies:
       bufferutil: ^4.0.1

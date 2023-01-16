@@ -1,17 +1,17 @@
-import { Injectable, Injector, Prop } from '@tanbo/di'
+import { Injectable, Injector } from '@tanbo/di'
 
 import { AbstractSelection, Range, Selection, SelectionPosition } from './selection'
 import {
+  Attribute,
+  BreakEventData,
   Component,
   ComponentInstance,
   ContentType,
   DeleteEventData,
   DeltaLite,
-  BreakEventData,
   Event,
   Formats,
   Formatter,
-  FormatType,
   FormatValue,
   InsertEventData,
   invokeListener,
@@ -19,7 +19,7 @@ import {
   SlotRange
 } from '../model/_api'
 import { NativeRenderer, RootComponentRef } from './_injection-tokens'
-import { Translator } from './translator'
+import { Registry } from './registry'
 
 function getInsertPosition(
   slot: Slot,
@@ -204,6 +204,9 @@ function deltaToSlots<T>(selection: Selection,
     parentComponentState: parentComponent.state
   }
   let newSlot = rule.slotFactory(context)
+  delta.attributes.forEach((value, key) => {
+    newSlot.setAttribute(key, value)
+  })
   const newSlots = [newSlot]
 
   let index = 0
@@ -241,6 +244,9 @@ function deltaToSlots<T>(selection: Selection,
       newSlots.push(...slots)
     }
     newSlot = rule.slotFactory(context)
+    delta.attributes.forEach((value, key) => {
+      newSlot.setAttribute(key, value)
+    })
   }
   return newSlots
 }
@@ -285,12 +291,10 @@ function getBlockRangeToBegin(selection: Selection, slot: Slot, offset: number):
 
 @Injectable()
 export class Commander {
-  @Prop()
-  private nativeRenderer!: NativeRenderer
 
   constructor(protected selection: Selection,
               protected injector: Injector,
-              protected translator: Translator,
+              protected registry: Registry,
               protected rootComponentRef: RootComponentRef) {
   }
 
@@ -336,8 +340,8 @@ export class Commander {
    * @param formats 新的格式
    */
   write(content: string | ComponentInstance, formats?: Formats): boolean
-  write(content: string | ComponentInstance, formatter?: Formatter, value?: FormatValue): boolean
-  write(content: string | ComponentInstance, formatter?: Formatter | Formats, value?: FormatValue): boolean {
+  write<T extends FormatValue>(content: string | ComponentInstance, formatter?: Formatter<T>, value?: T): boolean
+  write<T extends FormatValue>(content: string | ComponentInstance, formatter?: Formatter<T> | Formats, value?: T): boolean {
     const selection = this.selection
     const canInsert = selection.isCollapsed ? true : this.delete()
     if (!canInsert) {
@@ -367,8 +371,8 @@ export class Commander {
    * @param formats 新的格式
    */
   insert(content: string | ComponentInstance, formats?: Formats): boolean
-  insert(content: string | ComponentInstance, formatter?: Formatter, value?: FormatValue): boolean
-  insert(content: string | ComponentInstance, formatter?: Formatter | Formats, value?: FormatValue): boolean {
+  insert<T extends FormatValue>(content: string | ComponentInstance, formatter?: Formatter<T>, value?: T): boolean
+  insert<T extends FormatValue>(content: string | ComponentInstance, formatter?: Formatter<T> | Formats, value?: T): boolean {
     const selection = this.selection
     const canInsert = selection.isCollapsed ? true : this.delete()
     if (!canInsert) {
@@ -516,12 +520,12 @@ export class Commander {
         }
       }
       if (!deletedSlot.isEmpty) {
-        const formats = deletedSlot.extractFormatsByIndex(0)
-        formats.forEach(item => {
-          if (item[0].type === FormatType.Block) {
-            deletedSlot.removeAttribute(item[0])
-          }
-        })
+        // const formats = deletedSlot.extractFormatsByIndex(0)
+        // formats.forEach(item => {
+        //   if (item[0].type === FormatType.Block) {
+        //     deletedSlot.removeAttribute(item[0])
+        //   }
+        // })
         const deletedDelta = deletedSlot.toDelta()
         selection.setPosition(startSlot, startOffset)
         deletedDelta.forEach(item => {
@@ -617,7 +621,7 @@ export class Commander {
    * 复制当前选区内容
    */
   copy() {
-    this.nativeRenderer.copy()
+    this.injector.get(NativeRenderer).copy()
   }
 
   /**
@@ -637,32 +641,36 @@ export class Commander {
    * @param text 要粘贴的文本
    */
   paste(pasteSlot: Slot, text: string) {
-    if (!this.selection.isSelected) {
+    if (pasteSlot.isEmpty) {
       return false
     }
-    if (!this.selection.isCollapsed) {
+    const selection = this.selection
+    if (!selection.isSelected) {
+      return false
+    }
+    if (!selection.isCollapsed) {
       this.delete()
     }
-    const component = this.selection.commonAncestorComponent!
-    const slot = this.selection.commonAncestorSlot!
+    const component = selection.commonAncestorComponent!
+    const slot = selection.commonAncestorSlot!
     const event = new Event(slot, {
-      index: this.selection.startOffset!,
+      index: selection.startOffset!,
       data: pasteSlot,
       text
     })
     invokeListener(component, 'onPaste', event)
     if (!event.isPrevented) {
       const delta = pasteSlot.toDelta()
-      const afterDelta: DeltaLite = []
+      const afterDelta = new DeltaLite()
       while (delta.length) {
         const { insert, formats } = delta.shift()!
-        const commonAncestorSlot = this.selection.commonAncestorSlot!
+        const commonAncestorSlot = selection.commonAncestorSlot!
         if (canInsert(insert, commonAncestorSlot)) {
           this.insert(insert, formats)
           continue
         }
 
-        afterDelta.push(...commonAncestorSlot.cut(this.selection.startOffset!).toDelta())
+        afterDelta.push(...commonAncestorSlot.cut(selection.startOffset!).toDelta())
         const parentComponent = commonAncestorSlot.parent!
 
         if (commonAncestorSlot === parentComponent.slots.last) {
@@ -672,13 +680,13 @@ export class Commander {
         if (parentComponent.separable) {
           const index = parentComponent.slots.indexOf(commonAncestorSlot)
           const nextSlots = parentComponent.slots.cut(index + 1)
-          const nextComponent = this.translator.createComponentByData(parentComponent.name, {
+          const nextComponent = this.registry.createComponentByData(parentComponent.name, {
             state: typeof parentComponent.state === 'object' && parentComponent.state !== null ?
               JSON.parse(JSON.stringify(parentComponent.state)) :
               parentComponent.state,
             slots: nextSlots
           })!
-          delta.push({
+          afterDelta.push({
             insert: nextComponent,
             formats: []
           })
@@ -699,6 +707,13 @@ export class Commander {
         this.insert(insert, formats)
       }
       snapshot.restore()
+      const currentContent = selection.startSlot!.getContentAtIndex(selection.startOffset!)
+      if (currentContent &&
+        typeof currentContent !== 'string' &&
+        currentContent.type === ContentType.BlockComponent &&
+        currentContent.slots.length > 0) {
+        selection.toNext()
+      }
     }
     return !event.isPrevented
   }
@@ -707,7 +722,7 @@ export class Commander {
    * 清除当前选区的所有格式
    * @param excludeFormatters 在清除格式时，排除的格式
    */
-  cleanFormats(excludeFormatters: Formatter[] | ((formatter: Formatter) => boolean) = []) {
+  cleanFormats(excludeFormatters: Formatter<any>[] | ((formatter: Formatter<any>) => boolean) = []) {
     this.selection.getSelectedScopes().forEach(scope => {
       const slot = scope.slot
       if (scope.startIndex === 0) {
@@ -718,25 +733,7 @@ export class Commander {
           }
         }
       }
-
-      function cleanFormats(
-        slot: Slot,
-        excludeFormatters: Formatter[] | ((formatter: Formatter) => boolean),
-        startIndex: number,
-        endIndex: number
-      ) {
-        slot.cleanFormats(excludeFormatters, startIndex, endIndex)
-
-        slot.sliceContent(startIndex, endIndex).forEach(child => {
-          if (typeof child !== 'string') {
-            child.slots.toArray().forEach(childSlot => {
-              cleanFormats(childSlot, excludeFormatters, 0, childSlot.length)
-            })
-          }
-        })
-      }
-
-      cleanFormats(slot, excludeFormatters, scope.startIndex, scope.endIndex)
+      slot.cleanFormats(excludeFormatters, scope.startIndex, scope.endIndex)
     })
   }
 
@@ -745,10 +742,10 @@ export class Commander {
    * @param formatter 要应用的格式
    * @param value 当前格式要应用的值
    */
-  applyFormat(formatter: Formatter, value: FormatValue) {
+  applyFormat<T extends FormatValue>(formatter: Formatter<T>, value: T) {
     if (this.selection.isCollapsed) {
       const slot = this.selection.commonAncestorSlot!
-      if (formatter.type === FormatType.Block || slot.isEmpty) {
+      if (slot.isEmpty) {
         slot.retain(0)
         slot.retain(slot.length, formatter, value)
       } else {
@@ -769,10 +766,10 @@ export class Commander {
    * 清除当前选区特定的格式
    * @param formatter 要清除的格式
    */
-  unApplyFormat(formatter: Formatter) {
+  unApplyFormat(formatter: Formatter<any>) {
     if (this.selection.isCollapsed) {
       const slot = this.selection.commonAncestorSlot!
-      if (formatter.type === FormatType.Block || slot.isEmpty) {
+      if (slot.isEmpty) {
         slot.retain(0)
         slot.retain(slot.length, formatter, null)
       } else {
@@ -792,6 +789,100 @@ export class Commander {
     this.selection.getSelectedScopes().forEach(i => {
       i.slot.retain(i.startIndex)
       i.slot.retain(i.endIndex - i.startIndex, formatter, null)
+    })
+  }
+
+  /**
+   * 根据选区应用插槽属性
+   * @param attribute
+   * @param value
+   */
+  applyAttribute<T extends FormatValue>(attribute: Attribute<T>, value: T) {
+    if (this.selection.isCollapsed) {
+      const slot = this.selection.commonAncestorSlot!
+      slot.setAttribute(attribute, value)
+      return
+    }
+    this.selection.getSelectedScopes().forEach(i => {
+      const contents = i.slot.sliceContent(i.startIndex, i.endIndex)
+      const childComponents: ComponentInstance[] = []
+      let hasInlineContent = false
+      contents.forEach(item => {
+        if (typeof item === 'string' || item.type === ContentType.InlineComponent) {
+          hasInlineContent = true
+        } else {
+          childComponents.push(item)
+        }
+      })
+      if (hasInlineContent) {
+        i.slot.setAttribute(attribute, value)
+      } else {
+        childComponents.forEach(i => {
+          i.slots.toArray().forEach(slot => {
+            slot.setAttribute(attribute, value)
+          })
+        })
+      }
+    })
+  }
+
+  /**
+   * 根据选区清除插槽属性
+   * @param attribute
+   */
+  unApplyAttribute(attribute: Attribute<any>) {
+    if (this.selection.isCollapsed) {
+      const slot = this.selection.commonAncestorSlot!
+      slot.removeAttribute(attribute)
+      return
+    }
+    this.selection.getSelectedScopes().forEach(i => {
+      const contents = i.slot.sliceContent(i.startIndex, i.endIndex)
+      const childComponents: ComponentInstance[] = []
+      let hasString = false
+      contents.forEach(item => {
+        if (typeof item !== 'string') {
+          childComponents.push(item)
+        } else {
+          hasString = true
+        }
+      })
+      if (hasString) {
+        i.slot.removeAttribute(attribute)
+      } else {
+        childComponents.forEach(i => {
+          i.slots.toArray().forEach(slot => {
+            slot.removeAttribute(attribute)
+          })
+        })
+      }
+    })
+  }
+
+  /**
+   * 根据选区清除属性
+   */
+  cleanAttributes(excludeAttributes: Attribute<any>[] | ((attribute: Attribute<any>) => boolean) = []) {
+    this.selection.getSelectedScopes().forEach(i => {
+      const contents = i.slot.sliceContent(i.startIndex, i.endIndex)
+      const childComponents: ComponentInstance[] = []
+      let hasString = false
+      contents.forEach(item => {
+        if (typeof item !== 'string') {
+          childComponents.push(item)
+        } else {
+          hasString = true
+        }
+      })
+      if (hasString) {
+        i.slot.cleanAttributes(excludeAttributes)
+      } else {
+        childComponents.forEach(i => {
+          i.slots.toArray().forEach(slot => {
+            slot.cleanAttributes(excludeAttributes)
+          })
+        })
+      }
     })
   }
 
@@ -835,9 +926,6 @@ export class Commander {
       offset: Selection.getInlineContentEndIndex(endSlot, endOffset)
     }
 
-    let slots: Slot<U>[] = []
-    let position: SelectionPosition | null = null
-
     const parentComponent = startScope.slot.parent!
     if (parentComponent.separable) {
       if (startScope.slot !== parentComponent.slots.last) {
@@ -860,7 +948,7 @@ export class Commander {
             afterComponent = rule.existingComponentTransformer(parentComponent.name, deletedSlots, newState) || null
           }
           if (!afterComponent) {
-            afterComponent = this.translator.createComponentByData(parentComponent.name, {
+            afterComponent = this.registry.createComponentByData(parentComponent.name, {
               state: newState,
               slots: deletedSlots
             })
@@ -870,6 +958,8 @@ export class Commander {
       }
     }
 
+    let slots: Slot<U>[] = []
+    let position: SelectionPosition | null = null
     while (true) {
       const endPaths = selection.getPathsBySlot(startScope.slot)
       if (!endPaths) {
@@ -907,6 +997,12 @@ export class Commander {
       selection.setBaseAndExtent(slot, startIndex, slot, endIndex)
       if (slot.isEmpty) {
         startScope = selection.getPreviousPositionByPosition(slot, 0)
+        if (startScope.slot === slot && startScope.offset === startIndex) {
+          if (position) {
+            selection.setPosition(position.slot, position.offset)
+          }
+          break
+        }
         if (parentComponent.separable || parentComponent.slots.length === 1) {
           const delta = slot.toDelta()
           slots.unshift(...deltaToSlots(selection, slot, delta, rule, abstractSelection, 0))
@@ -922,7 +1018,18 @@ export class Commander {
         }
       } else {
         startScope = selection.getPreviousPositionByPosition(slot, startIndex)
+        if (startScope.slot === slot && startScope.offset === startIndex) {
+          if (position) {
+            selection.setPosition(position.slot, position.offset)
+          }
+          break
+        }
         if (startIndex === endIndex) {
+          const componentInstances = slotsToComponents(this.injector, slots, rule)
+          slots = []
+          componentInstances.forEach(instance => {
+            this.insert(instance)
+          })
           continue
         }
         this.delete(deletedSlot => {

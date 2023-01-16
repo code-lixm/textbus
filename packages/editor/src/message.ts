@@ -1,5 +1,5 @@
 import { Injectable, Injector } from '@tanbo/di'
-import { EDITOR_OPTIONS } from '@textbus/browser'
+import { EDITOR_OPTIONS} from '@textbus/platform-browser'
 
 import { EditorOptions } from './types'
 

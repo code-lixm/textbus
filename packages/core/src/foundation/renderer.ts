@@ -1,17 +1,23 @@
-import { Inject, Injectable, Prop } from '@tanbo/di'
+import { Injectable, Prop } from '@tanbo/di'
 import { Observable, Subject, Subscription } from '@tanbo/stream'
 
 import {
-  VElement,
-  VTextNode,
+  ComponentInstance,
+  Event,
+  FormatHostBindingRender,
   FormatItem,
   FormatTree,
-  ComponentInstance,
-  Slot,
   invokeListener,
-  Ref
+  jsx,
+  NativeNode,
+  Ref,
+  RenderMode,
+  Slot,
+  SlotRenderFactory,
+  VElement,
+  VTextNode
 } from '../model/_api'
-import { NativeNode, NativeRenderer, RootComponentRef, USE_CONTENT_EDITABLE } from './_injection-tokens'
+import { NativeRenderer, RootComponentRef } from './_injection-tokens'
 import { makeError } from '../_utils/make-error'
 import { Controller } from './controller'
 
@@ -32,31 +38,8 @@ interface ObjectChanges {
   add: [string, any][]
 }
 
-function setEditable(vElement: VElement, useContentEditable: boolean, is: boolean | null) {
-  if (useContentEditable) {
-    if (is === null) {
-      vElement.attrs.delete('contenteditable')
-      return
-    }
-    vElement.attrs.set('contenteditable', is ? 'true' : 'false')
-    return
-  }
-  if (is === null) {
-    vElement.attrs.delete('textbus-editable')
-    return
-  }
-  vElement.attrs.set('textbus-editable', is ? 'on' : 'off')
-}
-
-export function formatSort(formats: FormatItem[]) {
-  formats.sort((a, b) => {
-    const n = a.formatter.type - b.formatter.type
-    if (n === 0) {
-      return a.formatter.priority - b.formatter.priority
-    }
-    return n
-  })
-  return formats
+function setEditable(vElement: VElement, isSlot: boolean) {
+  vElement.attrs.set(isSlot ? 'textbus-slot-root' : 'textbus-component-root', '')
 }
 
 function getObjectChanges(target: Record<string, any>, source: Record<string, any>) {
@@ -154,8 +137,8 @@ class NativeElementMappingTable {
   private nativeVDomMapping = new WeakMap<NativeNode, VElement | VTextNode>()
   private vDomNativeMapping = new WeakMap<VElement | VTextNode, NativeNode>()
 
-  set(key: NativeNode, value: VElement | VTextNode): void
   set(key: VElement | VTextNode, value: NativeNode): void
+  set(key: NativeNode, value: VElement | VTextNode): void
   set(key: any, value: any) {
     if (this.get(key)) {
       this.delete(key)
@@ -172,8 +155,8 @@ class NativeElementMappingTable {
     }
   }
 
-  get(key: NativeNode): VElement | VTextNode;
   get(key: VElement | VTextNode): NativeNode;
+  get(key: NativeNode): VElement | VTextNode;
   get(key: any) {
     if (key instanceof VTextNode || key instanceof VElement) {
       return this.vDomNativeMapping.get(key)
@@ -224,14 +207,12 @@ export class Renderer {
   nativeRenderer!: NativeRenderer
 
   private componentVNode = new WeakMap<ComponentInstance, VElement>()
-
-  private slotVNodeCaches = new WeakMap<Slot, VElement>()
-
+  private slotRootVNodeCaches = new WeakMap<Slot, VElement>()
   private vNodeLocation = new WeakMap<VElement | VTextNode, VNodeLocation>()
-
   private renderedVNode = new WeakMap<VElement | VTextNode, true>()
+  private slotVNodesCaches = new WeakMap<Slot, Array<VElement | VTextNode>>()
 
-  private slotRenderFactory = new WeakMap<Slot, () => VElement>()
+  private slotRenderFactory = new WeakMap<Slot, SlotRenderFactory>()
 
   private nativeNodeCaches = new NativeElementMappingTable()
 
@@ -246,8 +227,7 @@ export class Renderer {
 
   private renderedComponents: ComponentInstance[] = []
 
-  constructor(@Inject(USE_CONTENT_EDITABLE) private useContentEditable: boolean,
-              private controller: Controller,
+  constructor(private controller: Controller,
               private rootComponentRef: RootComponentRef) {
     this.onViewUpdated = this.viewUpdatedEvent.asObservable()
     this.onViewUpdateBefore = this.viewUpdateBeforeEvent.asObservable()
@@ -275,7 +255,7 @@ export class Renderer {
       if (dirty || this.readonlyStateChanged) {
         if (this.oldVDom) {
           const oldNativeNode = this.nativeNodeCaches.get(this.oldVDom)
-          const newNativeNode = this.diffAndUpdate(root, this.oldVDom)
+          const newNativeNode = this.diffAndUpdate(root, this.oldVDom, component)
           if (oldNativeNode !== newNativeNode) {
             this.nativeRenderer.replace(newNativeNode, oldNativeNode)
           }
@@ -312,7 +292,7 @@ export class Renderer {
    * @param slot
    */
   getVNodeBySlot(slot: Slot) {
-    return this.slotVNodeCaches.get(slot)
+    return this.slotRootVNodeCaches.get(slot)
   }
 
   /**
@@ -337,7 +317,7 @@ export class Renderer {
    */
   getLocationByVNode(node: VElement | VTextNode | Slot) {
     if (node instanceof Slot) {
-      node = this.slotVNodeCaches.get(node)!
+      node = this.slotRootVNodeCaches.get(node)!
     }
     return this.vNodeLocation.get(node)
   }
@@ -351,41 +331,71 @@ export class Renderer {
     return this.vNodeLocation.get(vNode) || null
   }
 
+  /**
+   * 获取插槽内容节点集合
+   * @param slot
+   */
+  getVNodesBySlot(slot: Slot) {
+    return this.slotVNodesCaches.get(slot) || []
+  }
+
+  /**
+   * 销毁渲染器
+   */
   destroy() {
     this.subscription.unsubscribe()
   }
 
-  private sortNativeNode(parent: NativeNode, children: NativeNode[]) {
-    children.forEach((node, index) => {
+  private sortAndCleanNativeNode(parent: NativeNode, children: NativeNode[], component: ComponentInstance) {
+    let index = 0
+    while (true) {
+      const node = children[index]
+      if (!node) {
+        break
+      }
       const current = this.nativeRenderer.getChildByIndex(parent, index)
+      index++
       if (!current) {
         this.nativeRenderer.appendChild(parent, node)
-        return
+        continue
       }
       if (current !== node) {
         this.nativeRenderer.insertBefore(node, current)
       }
-    })
+    }
+    while (true) {
+      const current = this.nativeRenderer.getChildByIndex(parent, index)
+      if (!current) {
+        break
+      }
+      const event = new Event<ComponentInstance, NativeNode>(component, current)
+      invokeListener(component, 'onDirtyViewClean', event)
+      if (event.isPrevented) {
+        index++
+        continue
+      }
+      this.nativeRenderer.remove(current)
+    }
     return parent
   }
 
-  private diffAndUpdate(newVDom: VElement, oldVDom: VElement) {
+  private diffAndUpdate(newVDom: VElement, oldVDom: VElement, component: ComponentInstance) {
     const newNativeNode = this.diffNodeAndUpdate(newVDom, oldVDom)
 
-    const children = this.diffChildrenAndUpdate(newVDom, oldVDom)
+    const children = this.diffChildrenAndUpdate(newVDom, oldVDom, component)
 
-    return this.sortNativeNode(newNativeNode, children)
+    return this.sortAndCleanNativeNode(newNativeNode, children, component)
   }
 
-  private diffChildrenAndUpdate(newVDom: VElement, oldVDom: VElement) {
+  private diffChildrenAndUpdate(newVDom: VElement, oldVDom: VElement, component: ComponentInstance) {
     const newChildren = newVDom.children
     const oldChildren = oldVDom.children
 
-    const beginIdenticalNodes = this.diffIdenticalChildrenToEnd(newChildren, oldChildren)
-    const endIdenticalNodes = this.diffIdenticalChildrenToBegin(newChildren, oldChildren)
+    const beginIdenticalNodes = this.diffIdenticalChildrenToEnd(newChildren, oldChildren, component)
+    const endIdenticalNodes = this.diffIdenticalChildrenToBegin(newChildren, oldChildren, component)
 
-    const beginNodes = this.diffChildrenToEnd(newChildren, oldChildren)
-    const endNodes = this.diffChildrenToBegin(newChildren, oldChildren)
+    const beginNodes = this.diffChildrenToEnd(newChildren, oldChildren, component)
+    const endNodes = this.diffChildrenToBegin(newChildren, oldChildren, component)
 
 
     oldChildren.forEach(i => {
@@ -409,7 +419,10 @@ export class Renderer {
     ]
   }
 
-  private diffIdenticalChildrenToEnd(newChildren: Array<VElement | VTextNode>, oldChildren: Array<VElement | VTextNode>): NativeNode[] {
+  private diffIdenticalChildrenToEnd(
+    newChildren: Array<VElement | VTextNode>,
+    oldChildren: Array<VElement | VTextNode>,
+    component: ComponentInstance): NativeNode[] {
     const children: NativeNode[] = []
     while (newChildren.length && oldChildren.length) {
       const newFirstVNode = newChildren[0]
@@ -438,8 +451,8 @@ export class Renderer {
         } else {
           nativeNode = this.createElement(newFirstVNode)
         }
-        const cc = this.diffChildrenAndUpdate(newFirstVNode, oldFirstVNode)
-        children.push(this.sortNativeNode(nativeNode, cc))
+        const cc = this.diffChildrenAndUpdate(newFirstVNode, oldFirstVNode, component)
+        children.push(this.sortAndCleanNativeNode(nativeNode, cc, component))
       } else {
         break
       }
@@ -447,7 +460,10 @@ export class Renderer {
     return children
   }
 
-  private diffIdenticalChildrenToBegin(newChildren: Array<VElement | VTextNode>, oldChildren: Array<VElement | VTextNode>): NativeNode[] {
+  private diffIdenticalChildrenToBegin(
+    newChildren: Array<VElement | VTextNode>,
+    oldChildren: Array<VElement | VTextNode>,
+    component: ComponentInstance): NativeNode[] {
     const children: NativeNode[] = []
     while (newChildren.length && oldChildren.length) {
       const newLastVNode = newChildren[newChildren.length - 1]
@@ -476,8 +492,8 @@ export class Renderer {
         } else {
           nativeNode = this.createElement(newLastVNode)
         }
-        const cc = this.diffChildrenAndUpdate(newLastVNode, oldLastVNode)
-        children.push(this.sortNativeNode(nativeNode, cc))
+        const cc = this.diffChildrenAndUpdate(newLastVNode, oldLastVNode, component)
+        children.push(this.sortAndCleanNativeNode(nativeNode, cc, component))
       } else {
         break
       }
@@ -486,7 +502,10 @@ export class Renderer {
     return children.reverse()
   }
 
-  private diffChildrenToEnd(newChildren: Array<VElement | VTextNode>, oldChildren: Array<VElement | VTextNode>): NativeNode[] {
+  private diffChildrenToEnd(
+    newChildren: Array<VElement | VTextNode>,
+    oldChildren: Array<VElement | VTextNode>,
+    component: ComponentInstance): NativeNode[] {
     const children: NativeNode[] = []
     while (newChildren.length && oldChildren.length) {
       const newFirstVNode = newChildren[0]
@@ -499,7 +518,7 @@ export class Renderer {
           continue
         }
         if (oldFirstVNode instanceof VElement && newFirstVNode.tagName === oldFirstVNode.tagName) {
-          const nativeNode = this.diffAndUpdate(newFirstVNode, oldFirstVNode)
+          const nativeNode = this.diffAndUpdate(newFirstVNode, oldFirstVNode, component)
 
           children.push(nativeNode)
           newChildren.shift()
@@ -517,6 +536,7 @@ export class Renderer {
           const nativeNode = this.nativeNodeCaches.get(oldFirstVNode)
           this.nativeNodeCaches.set(newFirstVNode, nativeNode)
           children.push(nativeNode)
+          this.nativeRenderer.syncTextContent(nativeNode, newFirstVNode.textContent)
           newChildren.shift()
           oldChildren.shift()
         } else {
@@ -527,7 +547,10 @@ export class Renderer {
     return children
   }
 
-  private diffChildrenToBegin(newChildren: Array<VElement | VTextNode>, oldChildren: Array<VElement | VTextNode>): NativeNode[] {
+  private diffChildrenToBegin(
+    newChildren: Array<VElement | VTextNode>,
+    oldChildren: Array<VElement | VTextNode>,
+    component: ComponentInstance): NativeNode[] {
     const children: NativeNode[] = []
     while (newChildren.length && oldChildren.length) {
       const newLastVNode = newChildren[newChildren.length - 1]
@@ -540,7 +563,7 @@ export class Renderer {
           continue
         }
         if (oldLastVNode instanceof VElement && newLastVNode.tagName === oldLastVNode.tagName) {
-          const nativeNode = this.diffAndUpdate(newLastVNode, oldLastVNode)
+          const nativeNode = this.diffAndUpdate(newLastVNode, oldLastVNode, component)
 
           children.push(nativeNode)
           newChildren.pop()
@@ -558,6 +581,7 @@ export class Renderer {
           const nativeNode = this.nativeNodeCaches.get(oldLastVNode)
           this.nativeNodeCaches.set(newLastVNode, nativeNode)
           children.push(nativeNode)
+          this.nativeRenderer.syncTextContent(nativeNode, newLastVNode.textContent)
           newChildren.pop()
           oldChildren.pop()
         } else {
@@ -625,19 +649,34 @@ export class Renderer {
     return this.createTextNode(vDom)
   }
 
+  private extractVNodesBySlot(slot: Slot, tree: Array<VElement | VTextNode>, vNodes: Array<VTextNode | VElement>) {
+    for (const child of tree) {
+      const position = this.getLocationByVNode(child)
+      if (position) {
+        if (position.slot === slot) {
+          vNodes.push(child)
+        } else {
+          break
+        }
+        if (child instanceof VElement) {
+          this.extractVNodesBySlot(slot, child.children, vNodes)
+        }
+      }
+    }
+    return vNodes
+  }
+
   private componentRender(component: ComponentInstance): VElement {
     this.renderedComponents.push(component)
     if (component.changeMarker.dirty || this.readonlyStateChanged) {
-      let slotVNode!: VElement
-      const node = component.extends.render(this.controller.readonly, (slot, factory) => {
-        slotVNode = this.slotRender(component, slot, factory)
-        return slotVNode
-      })
-      if (component.slots.length === 1 && slotVNode === node) {
-        setEditable(node, this.useContentEditable, this.useContentEditable && !component.parent ? true : null)
-      } else {
-        setEditable(node, this.useContentEditable, false)
-      }
+      const node = component.extends.render((slot, factory) => {
+        return this.slotRender(component, slot, children => {
+          const vNodes = this.extractVNodesBySlot(slot, children, [])
+          this.slotVNodesCaches.set(slot, vNodes)
+          return factory(children)
+        })
+      }, this.controller.readonly ? RenderMode.Readonly : RenderMode.Editing)
+      setEditable(node, false)
       this.componentVNode.set(component, node)
       component.changeMarker.rendered()
       return node
@@ -649,23 +688,19 @@ export class Renderer {
           return
         }
         const dirty = slot.changeMarker.dirty
-        const oldVNode = this.slotVNodeCaches.get(slot)!
+        const oldVNode = this.slotRootVNodeCaches.get(slot)!
         const factory = this.slotRenderFactory.get(slot)!
         const vNode = this.slotRender(component, slot, factory)
         if (dirty) {
           if (oldComponentVNode === oldVNode) {
             this.componentVNode.set(component, vNode)
-            if (component.slots.length === 1) {
-              setEditable(vNode, this.useContentEditable, this.useContentEditable && !component.parent ? true : null)
-            } else {
-              setEditable(vNode, this.useContentEditable, false)
-            }
+            setEditable(vNode, false)
           }
           (oldVNode.parentNode as VElement).replaceChild(vNode, oldVNode)
           const oldNativeNode = this.nativeNodeCaches.get(oldVNode)
-          const newNativeNode = this.diffAndUpdate(vNode, oldVNode)
+          const newNativeNode = this.diffAndUpdate(vNode, oldVNode, component)
           this.nativeNodeCaches.set(newNativeNode, vNode)
-          this.slotVNodeCaches.set(slot, vNode)
+          this.slotRootVNodeCaches.set(slot, vNode)
           if (oldNativeNode !== newNativeNode) {
             this.nativeRenderer.replace(newNativeNode, oldNativeNode)
           }
@@ -676,7 +711,7 @@ export class Renderer {
     return this.componentVNode.get(component)!
   }
 
-  private slotRender(component: ComponentInstance, slot: Slot, slotRenderFactory: () => VElement): VElement {
+  private slotRender(component: ComponentInstance, slot: Slot, slotRenderFactory: SlotRenderFactory): VElement {
     if (!(slot instanceof Slot)) {
       throw rendererErrorFn(`${slot} of the component \`${component.name}\` is not a Slot instance.`)
     }
@@ -685,31 +720,32 @@ export class Renderer {
     }
     if (slot.changeMarker.dirty || this.readonlyStateChanged) {
       this.slotRenderFactory.set(slot, slotRenderFactory)
-      const root = slotRenderFactory()
+      const formatTree = slot.createFormatTree()
+
+      let children = formatTree.children ?
+        this.createVDomByFormatTree(slot, formatTree.children) :
+        this.createVDomByContent(slot, formatTree.startIndex, formatTree.endIndex)
+
+      if (formatTree.formats) {
+        children = [this.createVDomByOverlapFormats(formatTree.formats, children, slot)]
+      }
+      const root = slotRenderFactory(children)
+
       if (!(root instanceof VElement)) {
         throw rendererErrorFn(`component \`${component.name}\` slot rendering does not return a VElement.`)
       }
+      for (const [attribute, value] of slot.getAttributes()) {
+        attribute.render(root, value, this.controller.readonly ? RenderMode.Readonly : RenderMode.Editing)
+      }
       root.attrs.set(this.slotIdAttrKey, slot.id)
-      let host = root
-      setEditable(host, this.useContentEditable, true)
-      const formatTree = slot.createFormatTree()
-      if (formatTree.formats) {
-        host = this.createVDomByOverlapFormats(formatSort(formatTree.formats), root, slot)
-      }
-      if (formatTree.children) {
-        const children = this.createVDomByFormatTree(slot, formatTree.children)
-        host.appendChild(...children)
-      } else {
-        host.appendChild(...this.createVDomByContent(slot, formatTree.startIndex, formatTree.endIndex))
-      }
-
+      setEditable(root, true)
       this.vNodeLocation.set(root, {
         slot: slot,
         startIndex: 0,
         endIndex: slot.length
       })
       slot.changeMarker.rendered()
-      this.slotVNodeCaches.set(slot, root)
+      this.slotRootVNodeCaches.set(slot, root)
       return root
     }
     slot.sliceContent().filter((i): i is ComponentInstance => {
@@ -730,83 +766,84 @@ export class Renderer {
       if (dirty) {
         (oldVNode.parentNode as VElement).replaceChild(vNode, oldVNode)
         const oldNativeNode = this.nativeNodeCaches.get(oldVNode)
-        const newNativeNode = this.diffAndUpdate(vNode, oldVNode)
+        const newNativeNode = this.diffAndUpdate(vNode, oldVNode, component)
         if (oldNativeNode !== newNativeNode) {
           this.nativeRenderer.replace(newNativeNode, oldNativeNode)
         }
       }
     })
     slot.changeMarker.rendered()
-    return this.slotVNodeCaches.get(slot)!
+    return this.slotRootVNodeCaches.get(slot)!
   }
 
-  private createVDomByFormatTree(slot: Slot, formats: FormatTree[]) {
-    const children: Array<VElement | VTextNode> = []
-    formats.forEach(child => {
-      if (child.formats) {
-        const elements: VElement[] = []
-        const formats = formatSort(child.formats)
-        let host: VElement = null as any
-        formats.forEach(item => {
-          const node = item.formatter.render(host, item.value, this.controller.readonly)
-          if (node && host !== node) {
-            this.vNodeLocation.set(node, {
-              slot,
-              startIndex: item.startIndex,
-              endIndex: item.endIndex
-            })
-            elements.push(node)
-            host = node
-          }
-        })
+  private createVDomByFormatTree(slot: Slot, formats: FormatTree<any>[]) {
+    const nodes: Array<VElement | VTextNode> = []
+    for (const child of formats) {
+      if (child.formats?.length) {
+        const children = child.children ?
+          this.createVDomByFormatTree(slot, child.children) :
+          this.createVDomByContent(slot, child.startIndex, child.endIndex)
 
-        const node = elements.shift()
-        let parent = node!
-        if (node) {
-          while (elements.length) {
-            const c = elements.shift()!
-            parent.appendChild(c)
-            parent = c
-          }
-          children.push(node)
-          if (child.children) {
-            const c = this.createVDomByFormatTree(slot, child.children)
-            host.appendChild(...c)
-          } else {
-            host.appendChild(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
-          }
-        } else {
-          children.push(...this.createVDomByFormatTree(slot, child.children || []))
-        }
+        const nextChildren = this.createVDomByOverlapFormats(
+          child.formats,
+          children,
+          slot
+        )
+        nodes.push(nextChildren)
       } else {
-        children.push(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
+        nodes.push(...this.createVDomByContent(slot, child.startIndex, child.endIndex))
       }
-    })
-    return children
+    }
+    return nodes
   }
 
-  private createVDomByOverlapFormats(formats: FormatItem[], host: VElement, slot: Slot): VElement {
-    const item = formats.shift()
-    if (item) {
-      const next = item.formatter.render(host, item.value, this.controller.readonly)
-      if (next && next !== host) {
-        host.appendChild(next)
-        host = next
-        this.vNodeLocation.set(next, {
+  private createVDomByOverlapFormats(
+    formats: (FormatItem<any>)[],
+    children: Array<VElement | VTextNode>,
+    slot: Slot): VElement {
+    const hostBindings: Array<{ render: FormatHostBindingRender, item: FormatItem<any> }> = []
+    let host: VElement | null = null
+    for (let i = formats.length - 1; i > -1; i--) {
+      const item = formats[i]
+      const next = item.formatter.render(children, item.value, this.controller.readonly ? RenderMode.Readonly : RenderMode.Editing)
+      if (!next) {
+        throw rendererErrorFn(`Formatter \`${item.formatter.name}\` must return an VElement!`)
+      }
+      if (!(next instanceof VElement)) {
+        hostBindings.push({
+          item,
+          render: next
+        })
+        continue
+      }
+      host = next
+      this.vNodeLocation.set(next, {
+        slot,
+        startIndex: item.startIndex,
+        endIndex: item.endIndex
+      })
+      children = [next]
+    }
+    for (const binding of hostBindings) {
+      const { render, item } = binding
+      if (!host) {
+        host = jsx(render.fallbackTagName)
+        host.appendChild(...children)
+        this.vNodeLocation.set(host, {
           slot,
-          startIndex: 0,
-          endIndex: slot.length
+          startIndex: item.startIndex,
+          endIndex: item.endIndex
         })
       }
-      return this.createVDomByOverlapFormats(formats, host, slot)
+      render.attach(host)
     }
-    return host
+    return host!
   }
 
   private createVDomByContent(slot: Slot, startIndex: number, endIndex: number): Array<VTextNode | VElement> {
     const elements: Array<string | ComponentInstance> = slot.sliceContent(startIndex, endIndex).map(i => {
       if (typeof i === 'string') {
-        return i.match(/[\n]|[^\n]+/g)!
+        return i.match(/\n|[^\n]+/g)!
       }
       return i
     }).flat()

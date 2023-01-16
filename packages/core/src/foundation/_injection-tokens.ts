@@ -1,12 +1,6 @@
 import { InjectionToken } from '@tanbo/di'
 
-import { ComponentInstance, Formatter, Component } from '../model/_api'
-
-/**
- * 原生元素节点抽象类型
- */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type NativeNode = {} & any
+import { ComponentInstance, Formatter, Component, NativeNode, Attribute } from '../model/_api'
 
 /**
  * 原生渲染器抽象类，由具体平台提供具体实现
@@ -27,6 +21,8 @@ export abstract class NativeRenderer {
   abstract removeAttribute(target: NativeNode, key: string): void
 
   abstract setStyle(target: NativeNode, key: string, value: any): void
+
+  abstract syncTextContent(target: NativeNode, content: string): void
 
   abstract removeStyle(target: NativeNode, key: string): void
 
@@ -60,12 +56,12 @@ export const COMPONENT_LIST = new InjectionToken<Component[]>('COMPONENT_LIST')
 /**
  * @internal Textbus 格式列表注入 token
  */
-export const FORMATTER_LIST = new InjectionToken<Formatter[]>('FORMATTER_LIST')
+export const FORMATTER_LIST = new InjectionToken<Formatter<any>[]>('FORMATTER_LIST')
 
 /**
- * 使用 contentEditable 作为可编辑范围控制
+ * @internal Textbus 插槽属性注入列表
  */
-export const USE_CONTENT_EDITABLE = new InjectionToken<boolean>('USE_CONTENT_EDITABLE')
+export const ATTRIBUTE_LIST = new InjectionToken<Attribute<any>[]>('ATTRIBUTE_LIST')
 
 /**
  * 开启 Zen Coding 支持

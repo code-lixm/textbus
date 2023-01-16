@@ -5,6 +5,7 @@ import {
   ContentType,
   Controller,
   defineComponent,
+  RenderMode,
   Slot,
   SlotRender,
   useContext,
@@ -12,7 +13,7 @@ import {
   useSlots,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 
 import { blockComponent } from './block.component'
@@ -76,7 +77,7 @@ export const timelineComponent = defineComponent({
       classes.push('tb-timeline-border')
     }
     return {
-      render(isOutput: boolean, slotRender: SlotRender): VElement {
+      render(slotRender: SlotRender, renderMode): VElement {
         return (
           <div component-name='TimelineComponent' class={classes.join(' ')}>
             {
@@ -88,8 +89,8 @@ export const timelineComponent = defineComponent({
                 }
                 return (
                   <div class={classes.join(' ')}>
-                    <div class="tb-timeline-line" />
-                    <div class="tb-timeline-icon" title={isOutput ? null : '点击切换颜色'} onClick={() => {
+                    <div class="tb-timeline-line"/>
+                    <div class="tb-timeline-icon" title={renderMode === RenderMode.Editing ? null : '点击切换颜色'} onClick={() => {
                       if (!type) {
                         slot.updateState(draft => {
                           draft.type = timelineTypes[0] as TimelineType
@@ -101,7 +102,7 @@ export const timelineComponent = defineComponent({
                       }
                     }} />
                     {
-                      !isOutput &&
+                      renderMode === RenderMode.Editing &&
                       <span>
                         <span class="tb-timeline-plus" onClick={() => {
                           if(slots.length === 1) {
@@ -118,8 +119,8 @@ export const timelineComponent = defineComponent({
 
                     }
                     {
-                      slotRender(slot, () => {
-                        return <div class="tb-timeline-content" />
+                      slotRender(slot, (children) => {
+                        return <div class="tb-timeline-content" >{children}</div>
                       })
                     }
                   </div>

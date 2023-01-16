@@ -10,7 +10,7 @@ import {
   useSlots,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { useEnterBreaking } from './hooks/single-block-enter'
 
 export const paragraphComponent = defineComponent({
@@ -30,9 +30,9 @@ export const paragraphComponent = defineComponent({
     }
     useEnterBreaking(injector, slots)
     return {
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
-        return slotRender(slots.get(0)!, () => {
-          return <p/>
+      render(slotRender: SlotRender): VElement {
+        return slotRender(slots.get(0)!, (children) => {
+          return (<p>{children}</p>)
         })
       }
     }

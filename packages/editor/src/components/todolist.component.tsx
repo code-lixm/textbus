@@ -14,7 +14,7 @@ import {
   useSlots,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
+import { ComponentLoader, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import dayjs from 'dayjs'
 import { paragraphComponent } from './paragraph.component'
@@ -186,7 +186,7 @@ export const todolistComponent = defineComponent({
     })
 
     return {
-      render(_, slotRender): VElement {
+      render(slotRender): VElement {
         return (
           <div component-name="TodoComponent" class="tb-todolist">
             {slots.toArray().map((slot) => {
@@ -260,8 +260,8 @@ export const todolistComponent = defineComponent({
                     />
                   </div>
                   <div>
-                    {slotRender(slot, () => {
-                      return <span class="tb-todolist-content" />
+                    {slotRender(slot, (children) => {
+                      return <span class="tb-todolist-content" >{children}</span>
                     })}
                     {state.userList?.length ? (
                       <span class="info_box">

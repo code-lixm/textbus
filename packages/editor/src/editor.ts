@@ -1,7 +1,7 @@
 import { Provider, Type } from '@tanbo/di'
 import { fromEvent, fromPromise, Observable, of, Subject } from '@tanbo/stream'
 import { makeError, Selection, Starter } from '@textbus/core'
-import { Caret, Viewer } from '@textbus/browser'
+import { Input, Viewer } from '@textbus/platform-browser'
 
 import { EditorOptions } from './types'
 import { rootComponent, rootComponentLoader } from './root.component'
@@ -102,7 +102,7 @@ export class Editor extends Viewer {
     }
   }
 
-  override mount(selector: string | HTMLElement): Promise<Starter> {
+  override mount(selector: string | HTMLElement): Promise<this> {
     if (typeof selector === 'string') {
       this.host = document.querySelector(selector)!
     } else {
@@ -118,8 +118,8 @@ export class Editor extends Viewer {
       }
       if (!(this.options as EditorOptions).autoHeight) {
         const scrollContainer = this.layout.scroller
-        const caret = rootInjector.get(Caret)
-        caret.correctScrollTop({
+        const input = rootInjector.get(Input)
+        input.caret.correctScrollTop({
           onScroll: fromEvent(scrollContainer, 'scroll'),
           getLimit() {
             const rect = scrollContainer.getBoundingClientRect()
@@ -142,15 +142,13 @@ export class Editor extends Viewer {
     if (this.destroyed) {
       return
     }
-    if (this.injector) {
-      const types = [
-        Dialog
-      ]
+    const types = [
+      Dialog
+    ]
 
-      types.forEach(i => {
-        this.injector!.get(i as Type<{ destroy(): void }>).destroy()
-      })
-    }
+    types.forEach(i => {
+      this.get(i as Type<{ destroy(): void }>).destroy()
+    })
     this.layout.destroy()
     this.layout.container.parentNode?.removeChild(this.layout.container)
     super.destroy()

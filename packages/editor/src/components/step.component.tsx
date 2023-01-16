@@ -4,7 +4,7 @@ import {
   ContentType,
   Controller,
   defineComponent,
-  onDestroy,
+  onDestroy, RenderMode,
   Slot,
   useContext,
   useSlots,
@@ -12,7 +12,7 @@ import {
   VElement
 } from '@textbus/core'
 import { Injector } from '@tanbo/di'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 
 import { blockComponent } from './block.component'
 import { fontSizeFormatter } from '../formatters/_api'
@@ -66,7 +66,7 @@ export const stepComponent = defineComponent({
       sub.unsubscribe()
     })
     return {
-      render(isOutputMode: boolean, slotRender): VElement {
+      render(slotRender, renderMode): VElement {
         const currentStep = state.step
         const classes = ['tb-step']
         if(!readonly) {
@@ -101,12 +101,12 @@ export const stepComponent = defineComponent({
                       }}>{index + 1}</div>
                     </div>
                     {
-                      slotRender(slot, () => {
-                        return <div class="tb-step-item-content"/>
+                      slotRender(slot, children => {
+                        return <div class="tb-step-item-content">{children}</div>
                       })
                     }
                     {
-                      !isOutputMode && <span class="tb-step-item-add" onClick={
+                      renderMode === RenderMode.Editing && <span class="tb-step-item-add" onClick={
                         () => {
                           slots.insertByIndex(createStepSlot(injector), index + 1)
                         }

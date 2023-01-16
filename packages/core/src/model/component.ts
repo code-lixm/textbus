@@ -3,12 +3,12 @@ import { map, Observable, Subject, Subscription } from '@tanbo/stream'
 import { AbstractType, Type, InjectionToken, InjectFlags, Injector } from '@tanbo/di'
 
 import { makeError } from '../_utils/make-error'
-import { VElement } from './element'
+import { VElement, VTextNode } from './element'
 import { ContentType, Slot, SlotLiteral } from './slot'
 import { Formats } from './format'
 import { ChangeMarker } from './change-marker'
 import { Slots } from './slots'
-import { StateChange } from './types'
+import { RenderMode, StateChange } from './types'
 
 enablePatches()
 
@@ -30,12 +30,12 @@ export type ComponentInitData<State = unknown, SlotState = unknown> =
 
 export interface ComponentLiteral<State = any> {
   name: string
-  slots: SlotLiteral[]
+  slots: SlotLiteral<any, any>[]
   state: State
 }
 
 export interface SlotRenderFactory {
-  (): VElement
+  (children: Array<VElement | VTextNode>): VElement
 }
 
 export interface SlotRender {
@@ -43,7 +43,7 @@ export interface SlotRender {
 }
 
 export interface ComponentRender {
-  (isOutputMode: boolean, slotRender: SlotRender): VElement
+  (slotRender: SlotRender, renderMode: RenderMode): VElement
 }
 
 /**
@@ -189,8 +189,9 @@ export interface ChangeController<T> {
   /**
    * 组件状态更新函数
    * @param fn
+   * @param record 是否记录此次状态变更
    */
-  update(fn: (draft: Draft<T>) => void): T
+  update(fn: (draft: Draft<T>) => void, record?: boolean): T
 }
 
 export class Ref<T> {
@@ -218,6 +219,15 @@ export interface PasteEventData {
   index: number
   data: Slot
   text: string
+}
+
+export interface CompositionStartEventData {
+  index: number
+}
+
+export interface CompositionUpdateEventData {
+  index: number
+  data: string
 }
 
 export interface ContextMenuItem {
@@ -253,6 +263,12 @@ export interface SlotRange {
   endIndex: number
 }
 
+/**
+ * 原生元素节点抽象类型
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type NativeNode = {} & any
+
 export interface EventTypes {
   onUnselect: () => void
   onSelected: () => void
@@ -280,6 +296,10 @@ export interface EventTypes {
   onSlotRemoved: (event: Event<ComponentInstance>) => void
 
   onGetRanges: (event: GetRangesEvent<ComponentInstance>) => void
+  onDirtyViewClean: (event: Event<ComponentInstance, NativeNode>) => void
+  onCompositionStart: (event: Event<Slot, CompositionStartEventData>) => void
+  onCompositionUpdate: (event: Event<Slot, CompositionUpdateEventData>) => void
+  onCompositionEnd: (event: Event<Slot>) => void
 }
 
 class EventCache<T, K extends keyof T = keyof T> {
@@ -363,19 +383,19 @@ export function defineComponent<Extends extends ComponentExtends, State = any, S
       }
 
       const componentInstance: ComponentInstance<Extends, State> = {
+        name: component.name,
+        type: component.instanceType,
+        separable: component.separable,
         changeMarker: marker,
         parent: null,
-        separable: component.separable,
         get parentComponent() {
           return componentInstance.parent?.parent || null
         },
         get state() {
           return state!
         },
-        name: component.name,
         length: 1,
         onStateChange,
-        type: component.instanceType,
         slots: null as any,
         extends: null as any,
         shortcutList: null as any,
@@ -585,8 +605,15 @@ export function invokeListener(target: ComponentInstance, eventType: 'onSlotRemo
 export function invokeListener(target: ComponentInstance, eventType: 'onBreak', event: Event<Slot, BreakEventData>): void
 export function invokeListener(target: ComponentInstance, eventType: 'onContextMenu', event: ContextMenuEvent<ComponentInstance>): void
 export function invokeListener(target: ComponentInstance, eventType: 'onPaste', event: Event<Slot, PasteEventData>): void
-// eslint-disable-next-line max-len
+export function invokeListener(target: ComponentInstance, eventType: 'onDirtyViewClean', event: Event<ComponentInstance, NativeNode>): void
 export function invokeListener(target: ComponentInstance, eventType: 'onGetRanges', event: GetRangesEvent<ComponentInstance>): void
+export function invokeListener(target: ComponentInstance, eventType: 'onGetRanges', event: GetRangesEvent<ComponentInstance>): void
+export function invokeListener(target: ComponentInstance, eventType: 'onGetRanges', event: GetRangesEvent<ComponentInstance>): void
+// eslint-disable-next-line max-len
+export function invokeListener(target: ComponentInstance, eventType: 'onCompositionStart', event: Event<Slot, CompositionStartEventData>): void
+// eslint-disable-next-line max-len
+export function invokeListener(target: ComponentInstance, eventType: 'onCompositionUpdate', event: Event<Slot, CompositionUpdateEventData>): void
+export function invokeListener(target: ComponentInstance, eventType: 'onCompositionEnd', event: Event<Slot>): void
 export function invokeListener(target: ComponentInstance, eventType: 'onSelected'): void
 export function invokeListener(target: ComponentInstance, eventType: 'onUnselect'): void
 export function invokeListener(target: ComponentInstance, eventType: 'onFocus'): void
@@ -757,3 +784,19 @@ export const onDestroy = makeEventHook('onDestroy')
  * 当组件为选区公共父组件时的勾子
  */
 export const onGetRanges = makeEventHook('onGetRanges')
+/**
+ * 当 diff 视图时，检测到有脏节点时调用的勾子
+ */
+export const onDirtyViewClean = makeEventHook('onDirtyViewClean')
+/**
+ * 当插槽组合输入前触发
+ */
+export const onCompositionStart = makeEventHook('onCompositionStart')
+/**
+ * 当插槽组合输入时触发
+ */
+export const onCompositionUpdate = makeEventHook('onCompositionUpdate')
+/**
+ * 当插槽组合输入结束触发
+ */
+export const onCompositionEnd = makeEventHook('onCompositionEnd')

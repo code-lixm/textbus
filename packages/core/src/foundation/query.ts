@@ -1,7 +1,16 @@
 import { Injectable } from '@tanbo/di'
 
 import { Selection } from './selection'
-import { ComponentInstance, ComponentExtends, Formatter, FormatValue, Slot, Component } from '../model/_api'
+import {
+  ComponentInstance,
+  ComponentExtends,
+  Formatter,
+  FormatValue,
+  Slot,
+  Component,
+  Attribute,
+  SlotRange
+} from '../model/_api'
 
 /**
  * Textbus 状态查询状态枚举
@@ -35,7 +44,7 @@ export class Query {
    * 查询格式在当前选区的状态
    * @param formatter 要查询的格式
    */
-  queryFormat(formatter: Formatter): QueryState<FormatValue> {
+  queryFormat<T extends FormatValue>(formatter: Formatter<T>): QueryState<T> {
     if (!this.selection.isSelected) {
       return {
         state: QueryStateType.Normal,
@@ -44,6 +53,88 @@ export class Query {
     }
     const states = this.selection.getSelectedScopes().map(i => {
       return this.getStatesByRange(i.slot, formatter, i.startIndex, i.endIndex)
+    })
+    return this.mergeState(states)
+  }
+
+  /**
+   * 查询属性在当前选区的状态
+   * @param attribute
+   */
+  queryAttribute<T extends FormatValue>(attribute: Attribute<T>): QueryState<T> {
+    if (!this.selection.isSelected) {
+      return {
+        state: QueryStateType.Normal,
+        value: null
+      }
+    }
+
+    let ranges: SlotRange[]
+
+    if (this.selection.isCollapsed) {
+      const c = this.selection.commonAncestorSlot!
+      ranges = [{
+        slot: c,
+        startIndex: 0,
+        endIndex: c.length
+      }]
+    } else {
+      ranges = this.selection.getSelectedScopes()
+    }
+    const states = ranges.map(i => {
+      const contents = i.slot.sliceContent(i.startIndex, i.endIndex)
+      const childComponents: ComponentInstance[] = []
+      let hasString = false
+      contents.forEach(item => {
+        if (typeof item !== 'string') {
+          childComponents.push(item)
+        } else {
+          hasString = true
+        }
+      })
+      if (hasString) {
+        if (i.slot.hasAttribute(attribute)) {
+          return {
+            state: QueryStateType.Enabled,
+            value: i.slot.getAttribute(attribute)
+          }
+        }
+        return {
+          state: QueryStateType.Normal,
+          value: null
+        }
+      }
+      const states: QueryState<T>[] = []
+      for (const component of childComponents) {
+        const slots = component.slots
+        if (slots.length === 0) {
+          if (i.slot.hasAttribute(attribute)) {
+            states.push({
+              state: QueryStateType.Enabled,
+              value: i.slot.getAttribute(attribute)
+            })
+          } else {
+            return {
+              state: QueryStateType.Normal,
+              value: null
+            }
+          }
+        }
+        for (const slot of slots.toArray()) {
+          if (slot.hasAttribute(attribute)) {
+            states.push({
+              state: QueryStateType.Enabled,
+              value: slot.getAttribute(attribute)
+            })
+          } else {
+            return {
+              state: QueryStateType.Normal,
+              value: null
+            }
+          }
+        }
+      }
+      return this.mergeState(states)
     })
     return this.mergeState(states)
   }
@@ -126,7 +217,11 @@ export class Query {
     }
   }
 
-  private getStatesByRange(slot: Slot, formatter: Formatter, startIndex: number, endIndex: number): QueryState<FormatValue> | null {
+  private getStatesByRange<T extends FormatValue>(
+    slot: Slot,
+    formatter: Formatter<T>,
+    startIndex: number,
+    endIndex: number): QueryState<T> | null {
 
     if (startIndex === endIndex) {
       const format = startIndex === 0 ?
@@ -142,7 +237,7 @@ export class Query {
     }
 
     const childContents = slot.sliceContent(startIndex, endIndex)
-    const states: Array<QueryState<FormatValue> | null> = []
+    const states: Array<QueryState<T> | null> = []
 
     let index = startIndex
 

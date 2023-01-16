@@ -1,14 +1,15 @@
-import { FormatPriority, FormatType, InlineFormatter, VElement } from '@textbus/core'
+import { FormatHostBindingRender, VElement, VTextNode, Formatter } from '@textbus/core'
 import { Matcher, MatchRule } from './matcher'
+import { FormatLoader } from '@textbus/platform-browser'
 
-export class OuterStyleFormatLoader extends Matcher {
-  constructor(public styleName: string, formatter: OuterStyleFormatter, rule: MatchRule) {
+export class OuterStyleFormatLoader extends Matcher<any, Formatter<any>> implements FormatLoader<any> {
+  constructor(public styleName: string, formatter: Formatter<any>, rule: MatchRule) {
     super(formatter, rule)
   }
 
-  override read(node: HTMLElement) {
+  read(node: HTMLElement) {
     return {
-      formatter: this.formatter,
+      formatter: this.target,
       value: this.extractFormatData(node, {
         styleName: this.styleName
       }).styles[this.styleName]
@@ -16,21 +17,19 @@ export class OuterStyleFormatLoader extends Matcher {
   }
 }
 
-export class OuterStyleFormatter implements InlineFormatter {
-  type: FormatType.Inline = FormatType.Inline
-  priority = FormatPriority.Tag
+export class OuterStyleFormatter implements Formatter<any> {
+  columned = false
 
   constructor(public name: string,
               public styleName: string) {
   }
 
-  render(node: VElement | null, formatValue: string): VElement | void {
-    if (node) {
-      node.styles.set(this.styleName, formatValue)
-    } else {
-      const el = new VElement('span')
-      el.styles.set(this.styleName, formatValue)
-      return el
+  render(children: Array<VElement | VTextNode>, formatValue: string): FormatHostBindingRender {
+    return {
+      fallbackTagName: 'span',
+      attach: (host: VElement) => {
+        host.styles.set(this.styleName, formatValue)
+      }
     }
   }
 }

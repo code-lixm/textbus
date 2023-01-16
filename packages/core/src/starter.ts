@@ -1,25 +1,27 @@
 import { Injector, normalizeProvider, NullInjector, Provider, ReflectiveInjector, Scope } from '@tanbo/di'
 
-import { ComponentInstance, Formatter, Component } from './model/_api'
+import { ComponentInstance, Formatter, Component, NativeNode, Attribute } from './model/_api'
 import {
-  NativeNode,
   History,
   RootComponentRef,
   Renderer,
   COMPONENT_LIST,
   FORMATTER_LIST,
   Commander,
-  Registry,
   Keyboard,
   OutputRenderer,
   Query,
   Selection,
-  Translator,
   NativeSelectionBridge,
   NativeRenderer,
   Controller,
-  USE_CONTENT_EDITABLE,
-  CoreHistory, ZEN_CODING_DETECT, Scheduler, HISTORY_STACK_SIZE, READONLY
+  LocalHistory,
+  ZEN_CODING_DETECT,
+  Scheduler,
+  HISTORY_STACK_SIZE,
+  READONLY,
+  Registry,
+  ATTRIBUTE_LIST
 } from './foundation/_api'
 import { makeError } from './_utils/make-error'
 
@@ -48,7 +50,9 @@ export interface Module {
   /** 组件列表 */
   components?: Component[]
   /** 格式列表 */
-  formatters?: Formatter[]
+  formatters?: Formatter<any>[]
+  /** 属性列表 */
+  attributes?: Attribute<any>[]
   /** 跨平台及基础扩展实现的提供者 */
   providers?: Provider[]
   /** 插件集合 */
@@ -67,8 +71,6 @@ export interface Module {
 export interface TextbusConfig extends Module {
   /** 导入第三方包 */
   imports?: Module[]
-  /** 使用 contentEditable 作为编辑器控制可编辑范围 */
-  useContentEditable?: boolean
   /** 开启 Zen Coding 支持 */
   zenCoding?: boolean
   /** 最大历史记录栈 */
@@ -98,10 +100,10 @@ export class Starter extends ReflectiveInjector {
 
   /**
    * 启动一个 Textbus 实例，并将根组件渲染到原生节点
-   * @param rootComponent 根组件
    * @param host 原生节点
+   * @param rootComponent 根组件
    */
-  async mount(rootComponent: ComponentInstance, host: NativeNode) {
+  async mount(host: NativeNode, rootComponent: ComponentInstance): Promise<this> {
     const rootComponentRef = this.get(RootComponentRef)
     rootComponentRef.component = rootComponent
     rootComponentRef.host = host
@@ -158,6 +160,9 @@ export class Starter extends ReflectiveInjector {
     const components = [
       ...(config.components || [])
     ]
+    const attributes = [
+      ...(config.attributes || [])
+    ]
     const formatters = [
       ...(config.formatters || [])
     ]
@@ -184,6 +189,9 @@ export class Starter extends ReflectiveInjector {
         provide: COMPONENT_LIST,
         useValue: components
       }, {
+        provide: ATTRIBUTE_LIST,
+        useValue: attributes
+      }, {
         provide: FORMATTER_LIST,
         useValue: formatters
       }, {
@@ -194,23 +202,18 @@ export class Starter extends ReflectiveInjector {
         useValue: {}
       },
       {
-        provide: USE_CONTENT_EDITABLE,
-        useValue: config.useContentEditable
-      },
-      {
         provide: History,
-        useClass: CoreHistory
+        useClass: LocalHistory
       },
       Controller,
       Scheduler,
       Commander,
-      Registry,
       Keyboard,
       OutputRenderer,
       Query,
       Renderer,
       Selection,
-      Translator,
+      Registry,
       {
         provide: Starter,
         useFactory: () => this

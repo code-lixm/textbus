@@ -12,7 +12,7 @@ import {
   useSelf,
   Commander,
 } from '@textbus/core'
-import { ComponentLoader } from '@textbus/browser'
+import { ComponentLoader } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { Dialog } from '../dialog'
 import { Form, FormTextField } from '../uikit/forms/_api'

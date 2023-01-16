@@ -8,7 +8,7 @@ import {
   useRef,
   useState
 } from '@textbus/core'
-import { ComponentLoader } from '@textbus/browser'
+import { ComponentLoader } from '@textbus/platform-browser'
 // import { Subscription } from '@tanbo/stream'
 
 import { useDragResize } from './hooks/drag-resize'

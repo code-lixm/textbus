@@ -7,9 +7,10 @@ import {
   Slot, useContext,
   useSlots,
   useState,
-  VElement
+  VElement,
+  RenderMode
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { Injector } from '@tanbo/di'
 import { headingComponent } from './heading.component'
 import { paragraphComponent } from './paragraph.component'
@@ -123,7 +124,7 @@ export const jumbotronComponent = defineComponent({
     }
 
     return {
-      render(isOutputMode: boolean, slotRender): VElement {
+      render(slotRender, renderMode): VElement {
         return (
           <div component-name='JumbotronComponent' class='tb-jumbotron' style={{
             backgroundImage: state.backgroundImage ? `url("${state.backgroundImage}")` : null,
@@ -132,13 +133,13 @@ export const jumbotronComponent = defineComponent({
             minHeight: state.minHeight
           }}>
             {
-              !isOutputMode &&
+              renderMode === RenderMode.Editing &&
               <button type="button" class="tb-jumbotron-setting" onClick={setting}><span
                 class="textbus-icon-setting"></span></button>
             }
             {
-              slotRender(slots.get(0)!, () => {
-                return <div />
+              slotRender(slots.get(0)!, children => {
+                return <div>{children}</div>
               })
             }
           </div>

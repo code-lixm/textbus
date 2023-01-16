@@ -10,7 +10,7 @@ import {
   useState
 } from '@textbus/core'
 import { Injector, NullInjector, ReflectiveInjector } from '@tanbo/di'
-import { DomRenderer } from '@textbus/browser'
+import { DomRenderer } from '@textbus/platform-browser'
 
 describe('Component', () => {
   test('正确返回组件', () => {
@@ -229,7 +229,7 @@ describe('Component Hooks', () => {
       }
     })
     const componentInstance = testComponent.createInstance(injector)
-    const renderer = new Renderer(false, new Controller(false), {
+    const renderer = new Renderer(new Controller(false), {
       component: componentInstance,
       host: document.createElement('div')
     })

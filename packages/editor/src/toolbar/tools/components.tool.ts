@@ -1,6 +1,6 @@
 import { Injector } from '@tanbo/di'
 import { Commander, ComponentInstance, ContentType, QueryStateType, Selection, Slot } from '@textbus/core'
-import { createElement } from '@textbus/browser'
+import { createElement } from '@textbus/platform-browser'
 import { Observable, Subject } from '@tanbo/stream'
 
 import { DropdownTool, DropdownToolConfig } from '../toolkit/_api'
@@ -136,8 +136,8 @@ export function componentsToolConfigFactory(injector: Injector): DropdownToolCon
         const detailSlot = new Slot([Text, InlineComponent])
         titleSlot.insert('标题', boldFormatter, true)
         subtitleSlot.insert('副标题')
-        titleSlot.applyFormat(textAlignFormatter, 'right')
-        subtitleSlot.applyFormat(textAlignFormatter, 'right')
+        titleSlot.setAttribute(textAlignFormatter, 'right')
+        subtitleSlot.setAttribute(textAlignFormatter, 'right')
         detailSlot.insert('正文...')
         return wordExplainComponent.createInstance(injector, {
           slots: [titleSlot, subtitleSlot, detailSlot]

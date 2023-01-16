@@ -16,7 +16,8 @@ import {
   onDestroy,
   useDynamicShortcut,
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
+
 import { paragraphComponent } from './paragraph.component'
 
 const olTypeJudge: Array<'i' | 'a' | '1'> = ['i', '1', 'a']
@@ -272,7 +273,7 @@ export const listComponent = defineComponent({
 
     return {
       type: state.type,
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
+      render(slotRender: SlotRender): VElement {
         const Tag = state.type
         return (
           <Tag

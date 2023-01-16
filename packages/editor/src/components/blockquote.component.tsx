@@ -9,7 +9,7 @@ import {
   useSlots,
   VElement
 } from '@textbus/core'
-import { ComponentLoader, SlotParser } from '@textbus/browser'
+import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 
 export const blockquoteComponent = defineComponent({
   type: ContentType.BlockComponent,
@@ -41,9 +41,9 @@ export const blockquoteComponent = defineComponent({
       ]))
     }
     return {
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
-        return slotRender(slots.get(0)!, () => {
-          return <div class="tb-blockquote"/>
+      render(slotRender: SlotRender): VElement {
+        return slotRender(slots.get(0)!, children => {
+          return <div class="tb-blockquote">{children}</div>
         })
       }
     }

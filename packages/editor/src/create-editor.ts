@@ -1,5 +1,5 @@
-import { Component, Formatter } from '@textbus/core'
-import { ComponentLoader, FormatLoader } from '@textbus/browser'
+import { Attribute, Component, Formatter } from '@textbus/core'
+import { AttributeLoader, ComponentLoader, FormatLoader } from '@textbus/platform-browser'
 
 import { EditorOptions } from './types'
 import {
@@ -122,7 +122,7 @@ export const defaultComponentLoaders: ComponentLoader[] = [
   iframeComponentLoader,
 ]
 
-export const defaultFormatLoaders: FormatLoader[] = [
+export const defaultFormatLoaders: FormatLoader<any>[] = [
   boldFormatLoader,
   italicFormatLoader,
   colorFormatLoader,
@@ -135,13 +135,16 @@ export const defaultFormatLoaders: FormatLoader[] = [
   superscriptFormatLoader,
   underlineFormatLoader,
   codeFormatLoader,
-  blockBackgroundColorFormatLoader,
   linkFormatLoader,
   textBackgroundColorFormatLoader,
+  verticalAlignFormatLoader,
+]
+
+export const defaultAttributeLoaders: AttributeLoader<any>[] = [
+  blockBackgroundColorFormatLoader,
   textAlignFormatLoader,
   textIndentFormatLoader,
-  verticalAlignFormatLoader,
-  dirFormatLoader,
+  dirFormatLoader
 ]
 
 export const defaultComponents: Component[] = [
@@ -167,7 +170,7 @@ export const defaultComponents: Component[] = [
   iframeComponent,
   attachmentComponent
 ]
-export const defaultFormatters: Formatter[] = [
+export const defaultFormatters: Formatter<any>[] = [
   boldFormatter,
   italicFormatter,
   colorFormatter,
@@ -180,12 +183,15 @@ export const defaultFormatters: Formatter[] = [
   superscriptFormatter,
   underlineFormatter,
   codeFormatter,
-  blockBackgroundColorFormatter,
   linkFormatter,
   textBackgroundColorFormatter,
+  verticalAlignFormatter,
+]
+
+export const defaultAttributes: Attribute<any>[] = [
+  blockBackgroundColorFormatter,
   textAlignFormatter,
   textIndentFormatter,
-  verticalAlignFormatter,
   dirFormatter,
 ]
 
@@ -199,7 +205,9 @@ export const defaultOptions: EditorOptions = {
   components: defaultComponents,
   formatters: defaultFormatters,
   componentLoaders: defaultComponentLoaders,
-  formatLoaders: defaultFormatLoaders
+  formatLoaders: defaultFormatLoaders,
+  attributes: defaultAttributes,
+  attributeLoaders: defaultAttributeLoaders
 }
 
 export const defaultTools: ToolFactory[][] = [

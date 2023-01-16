@@ -16,9 +16,9 @@ import {
   onBreak,
   ComponentInstance,
   ComponentInitData,
-  useSelf, onViewInit
+  useSelf, onViewInit, onCompositionStart
 } from '@textbus/core'
-import { ComponentLoader, VIEW_DOCUMENT, EDITOR_OPTIONS, SlotParser } from '@textbus/browser'
+import { ComponentLoader, VIEW_DOCUMENT, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
 
 import { paragraphComponent } from './components/paragraph.component'
 import { EditorOptions } from './types'
@@ -105,9 +105,13 @@ export const rootComponent = defineComponent({
       subscription.unsubscribe()
     })
 
+    onCompositionStart(() => {
+      rootNode.current?.setAttribute('data-placeholder', '')
+    })
+
     return {
-      render(isOutputMode: boolean, slotRender: SlotRender): VElement {
-        return slotRender(slots.get(0)!, () => {
+      render(slotRender: SlotRender): VElement {
+        return slotRender(slots.get(0)!, (children) => {
           return new VElement('div', {
             'textbus-document': 'true',
             'ref': rootNode,
@@ -115,7 +119,7 @@ export const rootComponent = defineComponent({
               padding: '8px 8px 30px'
             },
             'data-placeholder': slots.get(0)?.isEmpty ? options.placeholder || '' : ''
-          })
+          }, children)
         })
       }
     }
